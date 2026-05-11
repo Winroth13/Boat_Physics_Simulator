@@ -537,9 +537,9 @@ bool Renderer::Create(DirectX::XMFLOAT4 clearColor, Window* window)
 			samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
 			samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
 			samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
-			samplerDesc.BorderColor[0] = 0.0f;
-			samplerDesc.BorderColor[1] = 0.0f;
-			samplerDesc.BorderColor[2] = 0.0f;
+			samplerDesc.BorderColor[0] = 1.0f;
+			samplerDesc.BorderColor[1] = 1.0f;
+			samplerDesc.BorderColor[2] = 1.0f;
 			samplerDesc.BorderColor[3] = 0.0f;
 			samplerDesc.MipLODBias = 0.0f;
 			samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
@@ -942,10 +942,10 @@ void Renderer::RenderShadowMaps()
 			camera.transform.SetPosition(direction);
 
 			// Center on the scene camera
-			// (pos % 2) * 2 is to remove the shimmering effect due to moving the sahdow-texture all the time
-			camera.transform.MoveX(float(int(mSceneCamera.pos.x) % 2) * 2);
-			camera.transform.MoveY(float(int(mSceneCamera.pos.y) % 2) * 2);
-			camera.transform.MoveZ(float(int(mSceneCamera.pos.z) % 2) * 2);
+			// Truncating is to remove the shimmering effect due to moving the shadow-texture all the time
+			camera.transform.MoveX((int)mSceneCamera.pos.x);
+			camera.transform.MoveY((int)mSceneCamera.pos.y);
+			camera.transform.MoveZ((int)mSceneCamera.pos.z);
 
 			camera.UpdateViewMatrix();
 

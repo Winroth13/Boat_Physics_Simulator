@@ -21,7 +21,6 @@
 
 #include "core/entities/boatentity.h"
 
-
 #include "graphics/particlesystem.h"
 
 #include "imgui/ImGuizmo.h"
