@@ -8,6 +8,7 @@
 #include "graphics/textures/cubemaptexture.h"
 
 #include "graphics/models/objmodel.h"
+#include "graphics/meshes/quadmesh.h"
 
 #include "graphics/shaders/vertexshader.h"
 #include "graphics/shaders/pixelshader.h"
@@ -16,11 +17,10 @@
 #include "core/entities/modelentity.h"
 #include "core/entities/cameraentity.h"
 #include "core/entities/enviromententity.h"
-#include "core/entities/pointlightentity.h"
 #include "core/entities/directionallightentity.h"
-#include "core/entities/spotlightentity.h"
-#include "core/entities/cubemapentity.h"
-#include "core/entities/particleentity.h"
+
+#include "core/entities/boatentity.h"
+
 
 #include "graphics/particlesystem.h"
 
@@ -34,44 +34,16 @@
 class TestApp : public App
 {
 public:
-	float time = 0;
-
 	std::unique_ptr<Entity>* inspectorEntity = nullptr;
-	Entity* cameraEntity;
-	Entity* spinningCube;
-	POINT previousMousePos;
 
-	std::vector<PointLightEntity*> firePointLights;
+	Entity* cameraEntity;
+	BoatEntity* boatEntity;
+
+	POINT previousMousePos;
 
 	void Initialize() override
 	{
-		auto skyCubemapTexture = std::make_shared<CubemapTexture>(
-			std::array<std::string, 6>
-		{
-			"assets/skybox/posx.jpg",
-				"assets/skybox/negx.jpg",
-				"assets/skybox/posy.jpg",
-				"assets/skybox/negy.jpg",
-				"assets/skybox/posz.jpg",
-				"assets/skybox/negz.jpg"
-		}
-		);
-
 		auto vShader = std::make_shared<VertexShader>("resources/VertexShader.cso");
-
-		auto sponza = std::make_shared<OBJModel>("assets/sponza/sponza_optimized.obj", vShader, true);
-		std::shared_ptr<Material> sponzaBricks = sponza->GetMaterialByName("bricks");
-		sponzaBricks->SetMaxTessFactor(50.0f);
-		sponzaBricks->SetMaxTessDistance(15.0f);
-		sponzaBricks->SetMinTessDistance(30.0f);
-		auto& entity = mScene->CreateEntity<ModelEntity>(sponza);
-		entity.SetName("Sponza");
-		entity.transform.SetScale(0.070f, 0.070f, 0.070f);
-		entity.transform.SetAngles(0, DirectX::XM_PI / 2, 0);
-		entity.SetFlag(EntityFlags::STATIC, true);
-
-		cameraEntity = &mScene->CreateEntity<CameraEntity>();
-		cameraEntity->transform.SetPosition(0, 1, 0);
 
 		auto& enviromentEntity = mScene->CreateEntity<EnviromentEntity>();
 		int ambientDivisor = 1;
@@ -82,153 +54,32 @@ public:
 		sunEntity.SetIntensity(0.75f);
 		sunEntity.SetVisible(true);
 
-		auto& spotEntity = mScene->CreateEntity<SpotLightEntity>();
-		spotEntity.SetColor({ 1.0, 0.0, 0.0 });
-		spotEntity.transform.SetPosition(-2.5f, 5.679f, -3.201f);
-		spotEntity.transform.SetAngles(
-			DirectX::XMConvertToRadians(-23),
-			DirectX::XMConvertToRadians(90),
-			DirectX::XMConvertToRadians(0)
-		);
-		spotEntity.SetIntensity(20);
+		auto& boatEntityRef = mScene->CreateEntity<BoatEntity>();
+		boatEntity = &boatEntityRef;
 
-		auto& spotEntity2 = mScene->CreateEntity<SpotLightEntity>();
-		spotEntity2.SetColor({ 1.0f, 1.0f, 1.0f });
-		spotEntity2.transform.SetPosition(-0.975f, 7.691f, -3.625f);
-		spotEntity2.transform.SetAngles(
-			DirectX::XMConvertToRadians(-9.0f),
-			DirectX::XMConvertToRadians(39.0f),
-			0
-		);
-		spotEntity2.SetIntensity(3);
+		auto boatModel = std::make_shared<OBJModel>("assets/cube/cube.obj", vShader);
 
-		auto& spotEntity3 = mScene->CreateEntity<SpotLightEntity>();
-		spotEntity3.SetColor({ 1.0f, 0.0f, 1.0f });
-		spotEntity3.transform.SetPosition(-0.053f, 0.638f, 12.0f);
-		spotEntity3.transform.SetAngles(
-			DirectX::XMConvertToRadians(-13.0f),
-			DirectX::XMConvertToRadians(88.0f),
-			0
-		);
-		spotEntity3.SetIntensity(24);
+		auto& boatModelEntity = mScene->CreateEntity<ModelEntity>(boatModel);
+		boatModelEntity.Attach(boatEntity);
+		boatModelEntity.SetName("Boat Model");
+		boatModelEntity.transform.SetPosition(0, 0, 0);
+		boatModelEntity.transform.SetScale(3, 1, 8);
 
-		auto& cubemapEntity = mScene->CreateEntity<CubemapEntity>(512);
-		cubemapEntity.SetDynamic(true);
+		auto oceanMesh = std::make_shared<QuadMesh>(1024.0f, 128.0f);
+		oceanMesh->SetName("Ocean Mesh");
+		auto oceanTexture = std::make_shared<ImageTexture2D>("assets/ocean/water_diffuse.jpg");
+		auto oceanMaterial = std::make_shared<Material>(vShader, oceanTexture);
+		oceanMaterial->SetName("Ocean Material");
 
-		auto cube = std::make_shared<OBJModel>("assets/cube/cube.obj", vShader, true);
-		cube->GetMaterial(0)->SetCubemapTexture(cubemapEntity.GetCubemapTexture());
+		auto oceanModel = std::make_shared<Model>(oceanMesh, oceanMaterial);
 
-		auto sphere = std::make_shared<OBJModel>("assets/sphere/sphere.obj", vShader, true);
-		sphere->GetMaterial(0)->SetCubemapTexture(cubemapEntity.GetCubemapTexture());
-		sphere->GetMaterial(0)->SetReflectiveness(1);
+		auto& oceanModelEntity = mScene->CreateEntity<ModelEntity>(oceanModel);
+		oceanModelEntity.SetName("Ocean");
 
-		auto& cubeEntity = mScene->CreateEntity<ModelEntity>(cube);
-		cubeEntity.SetName("Cube");
-		cubeEntity.transform.SetPosition(0, 2, 0);
-		cubeEntity.transform.SetScale(0.5, 0.5, 0.5);
-		spinningCube = &cubeEntity;
-
-		auto& sphereEntity = mScene->CreateEntity<ModelEntity>(sphere);
-		sphereEntity.SetName("Sphere");
-		sphereEntity.transform.SetPosition(-0.084f, 4.934f, -2.6f);
-
-		cubemapEntity.Attach(&sphereEntity);
-		cubeEntity.Attach(&sphereEntity);
-
-		/* Fires */
-		constexpr DirectX::XMFLOAT3 firePositions[4] =
-		{
-			{1.42f, 1.23f, 6.20f},
-			{-2.20f, 1.23f, 6.20f},
-			{1.42f, 1.23f, -4.87f},
-			{-2.20f, 1.23f, -4.87f}
-		};
-
-		for (int i = 0; i < 4; ++i)
-		{
-			auto& fireEntity = mScene->CreateEntity<Entity>();
-			fireEntity.SetName("Fire");
-			fireEntity.transform.SetPosition(firePositions[i]);
-
-			/* Create Fire Pointlight */
-			{
-				auto& pointLightEntity = mScene->CreateEntity<PointLightEntity>();
-				pointLightEntity.transform.SetPosition(0, 0.5f, 0);
-				pointLightEntity.SetName("Fire Light");
-				pointLightEntity.Attach(&fireEntity);
-				pointLightEntity.SetDynamicShadows(false);
-
-				pointLightEntity.SetColor({ 100 / 255.0f, 40 / 255.0f, 0 / 255.0f });
-				pointLightEntity.SetIntensity(0.7f);
-				pointLightEntity.SetAttenuation(0.1f);
-			}
-
-			/* Create Smoke Particle */
-			{
-				auto& smokeParticleEntity = mScene->CreateEntity<ParticleEntity>(28);
-				smokeParticleEntity.SetName("Smoke Particles");
-				smokeParticleEntity.Attach(&fireEntity);
-				smokeParticleEntity.transform.SetPosition(0.0f, 0.35f, 0.0f);
-
-				auto particleSystem = smokeParticleEntity.GetParticleSystem();
-				auto colorTexture = std::make_shared<ImageTexture2D>("assets/fire/smoke_color.jpg");
-				auto alphaTexture = std::make_shared<ImageTexture2D>("assets/fire/smoke_mask.jpg");
-
-				particleSystem->SetColorTexture(colorTexture);
-				particleSystem->SetAlphaTexture(alphaTexture);
-				particleSystem->SetAtlasWidth(13);
-				particleSystem->SetAtlasHeight(1);
-				particleSystem->SetAnimated(true);
-				particleSystem->SetDesaturate(false);
-				particleSystem->SetAdditive(false);
-
-				particleSystem->SetLifeTime(5.43f);
-				particleSystem->SetSpawnRadius(0.1f);
-				particleSystem->SetStartScale(0.3f);
-				particleSystem->SetEndScale(0.1f);
-				particleSystem->SetVelocity(0.24f);
-
-				particleSystem->SetStartTint(169 / 255.0f, 169 / 255.0f, 169 / 255.f);
-				particleSystem->SetEndTint(54 / 255.0f, 54 / 255.0f, 54 / 255.f);
-			}
-			/* Create Fire Particle */
-			{
-				auto& fireParticleEntity = mScene->CreateEntity<ParticleEntity>(28);
-				fireParticleEntity.SetName("Fire Particles");
-				fireParticleEntity.Attach(&fireEntity);
-
-				auto particleSystem = fireParticleEntity.GetParticleSystem();
-				auto colorTexture = std::make_shared<ImageTexture2D>("assets/fire/fire_atlas.jpg");
-				auto alphaTexture = std::make_shared<ImageTexture2D>("assets/fire/fire_mask_atlas.jpg");
-
-				particleSystem->SetColorTexture(colorTexture);
-				particleSystem->SetAlphaTexture(alphaTexture);
-				particleSystem->SetAtlasWidth(3);
-				particleSystem->SetAtlasHeight(3);
-				particleSystem->SetAnimated(true);
-				particleSystem->SetDesaturate(false);
-				particleSystem->SetAdditive(true);
-
-				particleSystem->SetLifeTime(1.2f);
-				particleSystem->SetSpawnRadius(0.12f);
-				particleSystem->SetStartScale(0.3f);
-				particleSystem->SetEndScale(0.105f);
-				particleSystem->SetDesaturatePower(1.5f);
-				particleSystem->SetVelocity(0.45f);
-
-				particleSystem->SetEndTint(0, 0, 0);
-			}
-		}
-
-		for (auto& entity : mScene->GetEntities())
-		{
-			PointLightEntity* pointEntity = dynamic_cast<PointLightEntity*>(entity.get());
-
-			if (pointEntity != nullptr)
-			{
-				firePointLights.emplace_back(pointEntity);
-			}
-		}
+		cameraEntity = &mScene->CreateEntity<CameraEntity>();
+		cameraEntity->transform.SetPosition(0, 8, -15);
+		cameraEntity->transform.SetPitch(DirectX::XMConvertToRadians(15));
+		cameraEntity->Attach(boatEntity);
 	};
 
 	void Shutdown() override
@@ -237,32 +88,8 @@ public:
 
 	void Update(double delta) override
 	{
-		time += (float)delta;
-
-		constexpr float AMPLITUDE = 0.3f;
-		constexpr float FREQ = 10.0f;
-		constexpr size_t OCTAVES = 3;
-
-		int i = 0;
-
-		for (auto& pointLight : firePointLights)
-		{
-			float ratio = 1.0f;
-			float freq = FREQ;
-			for (size_t octave = 0; octave < OCTAVES; octave++)
-			{
-				ratio *= (sin(time * freq + 10 * i)) / 2.0f;
-				freq /= 2.0f;
-			}
-
-			pointLight->SetAttenuation(ratio * AMPLITUDE + 0.1f);
-			i++;
-		}
-
-		spinningCube->transform.RotateY((3.14f / 2.0f) * (float)delta * 0.5f);
-
 		/* Only handle input if window is focused */
-		if (GetFocus() != NULL)
+		if (GetFocus() != NULL && false)
 		{
 			/* Camera Movement	*/
 			constexpr float SPEED = 3.0f;

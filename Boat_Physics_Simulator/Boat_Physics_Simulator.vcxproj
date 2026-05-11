@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="include\core\app.h" />
     <ClInclude Include="include\core\engine.h" />
+    <ClInclude Include="include\core\entities\boatentity.h" />
     <ClInclude Include="include\core\entities\cameraentity.h" />
     <ClInclude Include="include\core\entities\cubemapentity.h" />
     <ClInclude Include="include\core\entities\directionallightentity.h" />
@@ -87,6 +88,7 @@
     <ClInclude Include="vendor\tinyobjloader\tiny_obj_loader.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\core\entities\boatentity.cpp" />
     <ClCompile Include="src\core\entities\particleentity.cpp" />
     <ClCompile Include="src\core\renderer\aabbrenderer.cpp" />
     <ClCompile Include="src\core\renderer\linerenderer.cpp" />

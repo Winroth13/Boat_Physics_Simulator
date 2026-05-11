@@ -18,3 +18,7 @@ QuadMesh::QuadMesh(float size, float uvScale)
 		Create({}, {});
 	}
 }
+
+QuadMesh::~QuadMesh()
+{
+}
