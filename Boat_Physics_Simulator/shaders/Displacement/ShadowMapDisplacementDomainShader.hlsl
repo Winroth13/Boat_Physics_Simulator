@@ -1,0 +1,72 @@
+struct HullShaderOutput
+{
+    float3 worldPos : WORLD_POSITION;
+    float3 worldNormal : WORLD_NORMAL;
+    float2 uv : UV;
+};
+
+struct DomainShaderOutput
+{
+	float4 position  : SV_POSITION;
+    float3 worldPosition : WORLD_POSITION;
+    float3 worldNormal : WORLD_NORMAL;
+    float2 uv : UV;
+};
+
+struct PatchConstantOutput
+{
+    float EdgeTessFactor[3] : SV_TessFactor;
+    float InsideTessFactor : SV_InsideTessFactor;
+};
+
+cbuffer cbPerView : register(b1)
+{
+    float4x4 viewProjMatrix;
+    float4x4 viewMatrix;
+    float3 cameraPos;
+    float pad1;
+}
+
+Texture2D displaceTexture : register(t6);
+
+SamplerState samplerState : register(s0);
+
+#define NUM_CONTROL_POINTS 3
+
+[domain("tri")]
+DomainShaderOutput main(
+	PatchConstantOutput input, 
+	float3 barycentric : SV_DomainLocation,
+	const OutputPatch<HullShaderOutput, NUM_CONTROL_POINTS> patch
+)
+{
+    DomainShaderOutput output;
+
+    /* World Position */
+    output.worldPosition = 
+        patch[0].worldPos * barycentric.x +
+        patch[1].worldPos * barycentric.y + 
+        patch[2].worldPos * barycentric.z;
+
+    /* Normal */
+    output.worldNormal = normalize(
+        patch[0].worldNormal * barycentric.x +
+        patch[1].worldNormal * barycentric.y +
+        patch[2].worldNormal * barycentric.z
+    );
+    
+    /* UV */
+    output.uv =
+        patch[0].uv * barycentric.x +
+        patch[1].uv * barycentric.y +
+        patch[2].uv * barycentric.z;
+    
+    // TODO: The displacement texture is RGB right now, becasue it breaks otherwise.
+    float heightOffset = -0.5f + displaceTexture.SampleLevel(samplerState, output.uv, 0).r;
+    heightOffset *= 0.05f;
+    float3 displacedPos = output.worldPosition + output.worldNormal * heightOffset;
+    
+    output.position = mul(viewProjMatrix, float4(displacedPos, 1.0f));
+    
+	return output;
+}
