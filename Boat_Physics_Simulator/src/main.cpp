@@ -305,16 +305,8 @@ public:
 					DirectX::XMFLOAT4X4 view = camera.GetView4x4f();
 					DirectX::XMFLOAT4X4 proj = camera.GetProj4x4f();
 
-					Transform localTransform = inspectorEntity->get()->transform;
-
-					if (inspectorEntity->get()->HasAttach())
-					{
-						localTransform.Translate(attachEnt->GetGlobalPosition());
-						localTransform.Rotate(attachEnt->GetGlobalAngles());
-						localTransform.Scale(attachEnt->GetGlobalScale());
-					}
-
-					DirectX::XMFLOAT4X4 localMat = localTransform.GetMatrixf();
+					DirectX::XMFLOAT4X4 localMat;
+					DirectX::XMStoreFloat4x4(&localMat, inspectorEntity->get()->GetGlobalTransform());
 
 					Transform& transform = inspectorEntity->get()->transform;
 
