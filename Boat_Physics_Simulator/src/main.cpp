@@ -65,6 +65,12 @@ public:
 		boatModelEntity.transform.SetPosition(0, 0, 0);
 		boatModelEntity.transform.SetScale(3, 1, 8);
 
+		auto& cube = mScene->CreateEntity<ModelEntity>(boatModel);
+		cube.Attach(boatEntity);
+		cube.transform.SetPosition(0, 8, -15);
+		cube.transform.SetScale(1, 1, 1);
+		cube.SetVisible(false);
+
 		auto oceanMesh = std::make_shared<QuadMesh>(1024.0f, 128.0f);
 		oceanMesh->SetName("Ocean Mesh");
 		auto oceanTexture = std::make_shared<ImageTexture2D>("assets/ocean/water_diffuse.jpg");
@@ -79,7 +85,7 @@ public:
 		cameraEntity = &mScene->CreateEntity<CameraEntity>();
 		cameraEntity->transform.SetPosition(0, 8, -15);
 		cameraEntity->transform.SetPitch(DirectX::XMConvertToRadians(15));
-		cameraEntity->Attach(boatEntity);
+		cameraEntity->Attach(&cube);
 	};
 
 	void Shutdown() override

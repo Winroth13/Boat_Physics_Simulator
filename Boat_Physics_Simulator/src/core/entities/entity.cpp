@@ -119,19 +119,32 @@ DirectX::XMMATRIX Entity::GetGlobalTransform()
 
 DirectX::XMFLOAT3 Entity::GetGlobalPosition()
 {
-	DirectX::XMFLOAT3 position = transform.GetPosition3f();
-	if (mAttach != nullptr)
-	{
-		DirectX::XMFLOAT3 attachPos = mAttach->GetGlobalPosition();
-		position.x += attachPos.x;
-		position.y += attachPos.y;
-		position.z += attachPos.z;
-	}
+	DirectX::XMVECTOR translation;
+	DirectX::XMVECTOR rotation;
+	DirectX::XMVECTOR scale;
+
+	DirectX::XMMatrixDecompose(&scale, &rotation, &translation, GetGlobalTransform());
+
+	DirectX::XMFLOAT3 position = { 0, 0, 0 };
+	DirectX::XMStoreFloat3(&position, translation);
+
 	return position;
 }
 
 DirectX::XMFLOAT3 Entity::GetGlobalAngles()
 {
+	/*DirectX::XMVECTOR translation;
+	DirectX::XMVECTOR rotation;
+	DirectX::XMVECTOR scale;
+
+	DirectX::XMMatrixDecompose(&scale, &rotation, &translation, GetGlobalTransform());
+
+	DirectX::XMFLOAT4 rotationQuat;
+	DirectX::XMStoreFloat4(&rotationQuat, rotation);
+	DirectX::XMFLOAT3 rotation3f = Transform::QuaternionToEulerAngles(rotationQuat);
+
+	return rotation3f;*/
+
 	DirectX::XMFLOAT3 rotation = transform.GetAngles3f();
 	if (mAttach != nullptr)
 	{
@@ -145,15 +158,16 @@ DirectX::XMFLOAT3 Entity::GetGlobalAngles()
 
 DirectX::XMFLOAT3 Entity::GetGlobalScale()
 {
-	DirectX::XMFLOAT3 scale = transform.GetScale3f();
-	if (mAttach != nullptr)
-	{
-		DirectX::XMFLOAT3 attachScale = mAttach->GetGlobalScale();
-		scale.x += attachScale.x;
-		scale.y += attachScale.y;
-		scale.z += attachScale.z;
-	}
-	return scale;
+	DirectX::XMVECTOR translation;
+	DirectX::XMVECTOR rotation;
+	DirectX::XMVECTOR scale;
+
+	DirectX::XMMatrixDecompose(&scale, &rotation, &translation, GetGlobalTransform());
+
+	DirectX::XMFLOAT3 scale3f = { 0, 0, 0 };
+	DirectX::XMStoreFloat3(&scale3f, scale);
+
+	return scale3f;
 }
 
 DirectX::XMFLOAT3 Entity::GetGlobalForwardDir()
