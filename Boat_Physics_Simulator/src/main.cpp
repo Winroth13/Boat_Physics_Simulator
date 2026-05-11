@@ -86,8 +86,8 @@ public:
 		spotEntity.SetColor({ 1.0, 0.0, 0.0 });
 		spotEntity.transform.SetPosition(-2.5f, 5.679f, -3.201f);
 		spotEntity.transform.SetAngles(
-			DirectX::XMConvertToRadians(-23), 
-			DirectX::XMConvertToRadians(90), 
+			DirectX::XMConvertToRadians(-23),
+			DirectX::XMConvertToRadians(90),
 			DirectX::XMConvertToRadians(0)
 		);
 		spotEntity.SetIntensity(20);
@@ -96,8 +96,8 @@ public:
 		spotEntity2.SetColor({ 1.0f, 1.0f, 1.0f });
 		spotEntity2.transform.SetPosition(-0.975f, 7.691f, -3.625f);
 		spotEntity2.transform.SetAngles(
-			DirectX::XMConvertToRadians(-9.0f), 
-			DirectX::XMConvertToRadians(39.0f), 
+			DirectX::XMConvertToRadians(-9.0f),
+			DirectX::XMConvertToRadians(39.0f),
 			0
 		);
 		spotEntity2.SetIntensity(3);
@@ -561,7 +561,7 @@ App* CreateApp()
 WindowProps CreateWindowProperties()
 {
 	WindowProps props;
-	props.title = "Windal Renderer";
+	props.title = "Boat Physics Simulator";
 	props.width = 1280;
 	props.height = 640;
 
