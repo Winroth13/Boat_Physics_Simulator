@@ -28,7 +28,7 @@ std::string VectorToString(const XMVECTOR vector)
 	return Float3ToString(float3);
 }
 
-XMFLOAT3 QuaternionToEulerAngles(const XMFLOAT4& quaternion)
+XMFLOAT3 EulerFromQuaternion(const XMFLOAT4& quaternion)
 {
 	XMMATRIX matrix = XMMatrixRotationQuaternion(XMLoadFloat4(&quaternion));
 	XMFLOAT4X4 matrixf;
@@ -36,13 +36,11 @@ XMFLOAT3 QuaternionToEulerAngles(const XMFLOAT4& quaternion)
 
 	float pitch = asinf(-matrixf._32);
 	float yaw = atan2f(matrixf._31, matrixf._33);
-	float roll = atan2f(matrixf._12, matrixf._22);
-
-	//float roll;
-	//if (fabsf(pitch) != XM_PIDIV2) // Prevent Gimbal Lock?
-	//	roll = atan2f(matrixf._12, matrixf._22);
-	//else
-	//	roll = 0;
+	float roll;
+	if (fabsf(pitch) != XM_PIDIV2) // Prevent Gimbal Lock
+		roll = atan2f(matrixf._12, matrixf._22);
+	else
+		roll = 0;
 
 	return XMFLOAT3(pitch, yaw, roll);
 }
@@ -53,5 +51,5 @@ XMFLOAT3 AnglesFromMatrix(XMMATRIX matrix)
 	XMMatrixDecompose(&scale, &rotation, &translation, matrix);
 	XMFLOAT4 quaternion;
 	XMStoreFloat4(&quaternion, rotation);
-	return QuaternionToEulerAngles(quaternion);
+	return EulerFromQuaternion(quaternion);
 }
