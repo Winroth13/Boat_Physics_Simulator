@@ -1,5 +1,6 @@
 #include "math/transform.h"
 #include "core/logger.h"
+#include "math/mathfunctions.h"
 
 using namespace DirectX;
 
@@ -245,16 +246,13 @@ void Transform::LookAt(
 	DirectX::FXMVECTOR up
 )
 {
-	XMStoreFloat4x4(
-		&mMatrix,
+	mAngles = AnglesFromMatrix(
 		XMMatrixLookAtLH(
 			position,
 			target,
 			up
 		)
 	);
-
-	mAngles = AnglesFromMatrix(mMatrix);
 
 	mIsDirty = false;
 }
@@ -384,48 +382,4 @@ void Transform::RotateZ(float angle)
 {
 	mAngles.z += angle;
 	mIsDirty = true;
-}
-
-DirectX::XMFLOAT3 Transform::QuaternionToEulerAngles(const DirectX::XMFLOAT4& quaternion)
-{
-	DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationQuaternion(XMLoadFloat4(&quaternion));
-	DirectX::XMFLOAT4X4 m;
-	DirectX::XMStoreFloat4x4(&m, rotationMatrix);
-
-	DirectX::XMFLOAT3 euler;
-
-	float sinPitch = -m._32; // -(-sx) = sx
-	sinPitch = sinPitch < -1.0f ? -1.0f : sinPitch > 1.0f ? 1.0f : sinPitch;
-
-	if (fabsf(sinPitch) < 0.9999f)
-	{
-		euler.x = asinf(sinPitch);
-		euler.y = atan2f(m._31, m._33); // (cx * sy) / (cx * cy) = sy / cy = ty
-		euler.z = atan2f(m._12, m._22); // (sz * cx) / (cz * cx) = sz / cz = tz
-	}
-	else
-	{ // Gimbal lock
-  // -(sz * sx * cy - cz * sy) / (cz * cy + sz * sx * sy), sx = 1 => 
-  // (cz * sy - sz * cy) / (cz * cy + sz * sy) = s(z - y) / c(z - y) = t(z - y)
-  // z = 0 => t(-y) = -ty
-  // sx = -1 => t(-y) = -ty
-
-		euler.x = sinPitch > 0.0f ? XM_PIDIV2 : -XM_PIDIV2;
-		euler.y = atan2f(-m._13, m._11);
-		euler.z = 0.0f;
-	}
-
-	euler.x = XMConvertToDegrees(euler.x);
-	euler.y = XMConvertToDegrees(euler.y);
-	euler.z = XMConvertToDegrees(euler.z);
-
-	return euler;
-}
-
-XMFLOAT3 Transform::AnglesFromMatrix(XMFLOAT4X4& matrix)
-{
-	float pitch = (float)atan2(-matrix._31, sqrt(matrix._32 * matrix._32 + matrix._33 * matrix._33));
-	float yaw = (float)atan2(matrix._21, matrix._11);
-	float roll = (float)atan2(matrix._32, matrix._33);
-	return XMFLOAT3(pitch, yaw, roll);
 }

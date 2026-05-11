@@ -87,8 +87,6 @@ public:
 	void RotateY(float angle);
 	void RotateZ(float angle);
 
-	static DirectX::XMFLOAT3 QuaternionToEulerAngles(const DirectX::XMFLOAT4& quaternion);
-
 private:
 	DirectX::XMFLOAT3 mPosition = { 0.0f, 0.0f, 0.0f };
 	DirectX::XMFLOAT3 mAngles = { 0, 0, 0 };
@@ -99,7 +97,6 @@ private:
 		0.0f, 0.0f, 1.0f, 0.0f,
 		0.0f, 0.0f, 0.0f, 1.0f
 	};
-	bool mIsDirty = false;
 
-	DirectX::XMFLOAT3 AnglesFromMatrix(DirectX::XMFLOAT4X4& matrix);
+	bool mIsDirty = false;
 };
