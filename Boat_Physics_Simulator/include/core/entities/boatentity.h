@@ -1,5 +1,6 @@
 #pragma once
 #include "core/entities/entity.h"
+#include "core/entities/modelentity.h"
 
 #include <DirectXMath.h>
 
@@ -9,10 +10,14 @@ public:
 	BoatEntity();
 	~BoatEntity();
 
+	void SetMotorHingeEntity(Entity* e) { mMotorHingeEntity = e; }
+
 protected:
+	virtual void BeginSelf(RenderServer& renderServer) override;
 	virtual void UpdateSelf(double delta) override;
 	virtual void RenderSelf(RenderServer& renderServer) override;
-	virtual void RenderImguiSelf() override;
+
+	void Input(float delta);
 
 	float CalculateWaterViscosity(float waterTemperature, float waterViscosityFactor);
 
@@ -33,17 +38,39 @@ protected:
 		float boatVelocity
 	);
 
+	float CalculateMomentOfInertia(float length, float width, float mass);
+
+	virtual void RenderImguiSelf() override;
+
 private:
 	static constexpr float SALT_WATER_CONSTANT = 1.08f;
 	static constexpr float FRESH_WATER_CONSTANT = 1;
 	static constexpr float WATER_DENSITY = 1000;
 	static constexpr float WATER_TEMPERATURE = 273.15f + 10;
-	static constexpr float BOAT_LENGTH = 8;
+
+	static constexpr float BOAT_WIDTH = 3.0f;
+	static constexpr float BOAT_LENGTH = 6.0f;
+	static constexpr float BOAT_HEIGHT = 1.0f;
+	static constexpr float BOAT_LENGTH_TO_MOTOR = 2.0f;
+
+	static constexpr float BOAT_MAX_TURN_ANGLE = DirectX::XMConvertToRadians(30);
+
+	static constexpr float UPDATE_RATE = 1 / 60.0f;
+
+	Entity* mMotorHingeEntity = nullptr;
+
+	float mUpdateTimer = 0.0f;
 
 	// Xi
-	float mUserInput = 0.0f; // TODO: There must be a better name for this variable!
-	float mTimeToMaxInput = 0.2f;
-	float mInputTimer = 0.0f;
+	float mForwardUserInput = 0.0f;
+	float mForwardTimeToMaxInput = 1.0f;
+	float mForwardInputTimer = 0.0f;
+
+	float mTurnUserInput = 0.0f;
+	float mTurnTimeToMaxInput = 4.0f;
+	float mTurnInputTimer = mTurnTimeToMaxInput / 2.0f;
+
+	float GetTurnAngle() { return mTurnUserInput * BOAT_MAX_TURN_ANGLE; }
 
 	/* Constants */
 	float mMass = 100.0f;
@@ -55,8 +82,10 @@ private:
 
 	float mEnginePower = 20000;
 
-	float mVelocity = 20.0f;
-	float mAcceleration = 0.0f;
+	float mVelocity = 20;
+	float mAcceleration = 0;
+
+	float mAngularVelocity = 0.0f;
 
 	/* Forces */
 	float mThrustForce = 0.0f;

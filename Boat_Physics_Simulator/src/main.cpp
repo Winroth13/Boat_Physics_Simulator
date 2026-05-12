@@ -33,10 +33,9 @@
 class TestApp : public App
 {
 public:
-	std::unique_ptr<Entity>* inspectorEntity = nullptr;
+	Entity* inspectorEntity = nullptr;
 
 	Entity* cameraEntity;
-	BoatEntity* boatEntity;
 
 	POINT previousMousePos;
 
@@ -53,32 +52,51 @@ public:
 		sunEntity.SetIntensity(0.75f);
 		sunEntity.SetVisible(true);
 
-		auto& boatEntityRef = mScene->CreateEntity<BoatEntity>();
-		boatEntity = &boatEntityRef;
+		auto& boatEntity = mScene->CreateEntity<BoatEntity>();
+		inspectorEntity = &boatEntity;
 
 		auto boatModel = std::make_shared<OBJModel>("assets/cube/cube.obj", vShader);
 
 		auto& boatModelEntity = mScene->CreateEntity<ModelEntity>(boatModel);
-		boatModelEntity.Attach(boatEntity);
+		boatModelEntity.Attach(&boatEntity);
 		boatModelEntity.SetName("Boat Model");
 		boatModelEntity.transform.SetPosition(0, 0, 0);
 		boatModelEntity.transform.SetScale(3, 1, 8);
 
-		auto oceanMesh = std::make_shared<QuadMesh>(1024.0f, 128.0f);
-		oceanMesh->SetName("Ocean Mesh");
-		auto oceanTexture = std::make_shared<ImageTexture2D>("assets/ocean/water_diffuse.jpg");
-		auto oceanMaterial = std::make_shared<Material>(vShader, oceanTexture);
-		oceanMaterial->SetName("Ocean Material");
+		mScene->CreateEntity<ModelEntity>(boatModel).Attach(&boatEntity);
 
-		auto oceanModel = std::make_shared<Model>(oceanMesh, oceanMaterial);
+		auto& motorHingeEntity = mScene->CreateEntity<Entity>();
+		motorHingeEntity.Attach(&boatEntity);
+		motorHingeEntity.SetName("Motor Hinge");
+		motorHingeEntity.transform.SetPosition(0, 0, -8.5f);
 
-		auto& oceanModelEntity = mScene->CreateEntity<ModelEntity>(oceanModel);
-		oceanModelEntity.SetName("Ocean");
+		boatEntity.SetMotorHingeEntity(&motorHingeEntity);
 
-		cameraEntity = &mScene->CreateEntity<CameraEntity>();
-		cameraEntity->transform.SetPosition(0, 8, -15);
-		cameraEntity->transform.SetPitch(DirectX::XMConvertToRadians(15));
-		cameraEntity->Attach(boatEntity);
+		auto& motorModelEntity = mScene->CreateEntity<ModelEntity>(boatModel);
+		motorModelEntity.Attach(&motorHingeEntity);
+		motorModelEntity.SetName("Motor Model");
+		motorModelEntity.transform.SetPosition(0, 0, -0.5f);
+		motorModelEntity.transform.SetScale(0.4f, 1, 1);
+
+		/* Ocean */
+		{
+			auto oceanMesh = std::make_shared<QuadMesh>(1024.0f, 128.0f);
+			oceanMesh->SetName("Ocean Mesh");
+			auto oceanTexture = std::make_shared<ImageTexture2D>("assets/ocean/water_diffuse.jpg");
+
+			auto oceanMaterial = std::make_shared<Material>(vShader, oceanTexture);
+			oceanMaterial->SetName("Ocean Material");
+
+			auto oceanModel = std::make_shared<Model>(oceanMesh, oceanMaterial);
+
+			auto& oceanModelEntity = mScene->CreateEntity<ModelEntity>(oceanModel);
+			oceanModelEntity.SetName("Ocean");
+		}
+
+		auto& cameraEntity = mScene->CreateEntity<CameraEntity>();
+		cameraEntity.transform.SetPosition(0, 8, -15);
+		cameraEntity.transform.SetPitch(DirectX::XMConvertToRadians(15));
+		cameraEntity.Attach(&boatEntity);
 	};
 
 	void Shutdown() override
@@ -251,7 +269,7 @@ public:
 					ImGuiTreeNodeFlags flags =
 						ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
 
-					if (inspectorEntity != nullptr && entity == *inspectorEntity)
+					if (inspectorEntity != nullptr && entity.get() == inspectorEntity)
 					{
 						flags |= ImGuiTreeNodeFlags_Selected;
 					}
@@ -270,7 +288,7 @@ public:
 
 					if (ImGui::IsItemClicked())
 					{
-						inspectorEntity = &entity;
+						inspectorEntity = entity.get();
 					}
 				}
 				ImGui::TreePop();
@@ -284,7 +302,7 @@ public:
 			ImGui::Begin("Inspector");
 			if (inspectorEntity != nullptr)
 			{
-				inspectorEntity->get()->RenderImgui();
+				inspectorEntity->RenderImgui();
 
 				/* Draw Gizmos */
 				{
@@ -294,15 +312,15 @@ public:
 					ImGuizmo::SetOrthographic(true);
 
 					auto& camera = mScene->GetCamera();
-					Entity* attachEnt = inspectorEntity->get()->GetAttachEntity();
+					Entity* attachEnt = inspectorEntity->GetAttachEntity();
 
 					DirectX::XMFLOAT4X4 view = camera.GetView4x4f();
 					DirectX::XMFLOAT4X4 proj = camera.GetProj4x4f();
 
 					DirectX::XMFLOAT4X4 localMat;
-					DirectX::XMStoreFloat4x4(&localMat, inspectorEntity->get()->GetGlobalTransform());
+					DirectX::XMStoreFloat4x4(&localMat, inspectorEntity->GetGlobalTransform());
 
-					Transform& transform = inspectorEntity->get()->transform;
+					Transform& transform = inspectorEntity->transform;
 
 					float translate[3] = { -1, -1, -1 };
 					float rotation[3] = { -1, -1, -1 };
@@ -315,7 +333,7 @@ public:
 						switch (mGizmoOperation)
 						{
 						case ImGuizmo::TRANSLATE:
-							if (inspectorEntity->get()->HasAttach())
+							if (inspectorEntity->HasAttach())
 							{
 								DirectX::XMFLOAT3 invAttachPos = attachEnt->GetGlobalPosition();
 								invAttachPos.x = -invAttachPos.x;
@@ -330,7 +348,7 @@ public:
 							break;
 
 						case ImGuizmo::SCALE:
-							if (inspectorEntity->get()->HasAttach())
+							if (inspectorEntity->HasAttach())
 							{
 								DirectX::XMFLOAT3 invAttachScale = attachEnt->GetGlobalScale();
 								invAttachScale.x = -invAttachScale.x;
