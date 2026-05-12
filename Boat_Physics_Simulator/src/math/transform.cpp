@@ -290,8 +290,8 @@ const DirectX::XMMATRIX Transform::GetMatrix()
 	if (mIsDirty)
 	{
 		XMMATRIX newMatrix = DirectX::XMMatrixIdentity();
-		newMatrix *= XMMatrixRotationRollPitchYawFromVector(XMLoadFloat3(&mAngles));
 		newMatrix *= DirectX::XMMatrixScaling(mScale.x, mScale.y, mScale.z);
+		newMatrix *= XMMatrixRotationRollPitchYawFromVector(XMLoadFloat3(&mAngles));
 		newMatrix *= DirectX::XMMatrixTranslation(mPosition.x, mPosition.y, mPosition.z);
 		XMStoreFloat4x4(&mMatrix, newMatrix);
 		mIsDirty = false;
@@ -305,8 +305,8 @@ const DirectX::XMFLOAT4X4 Transform::GetMatrixf()
 	if (mIsDirty)
 	{
 		XMMATRIX newMatrix = DirectX::XMMatrixIdentity();
-		newMatrix *= XMMatrixRotationRollPitchYawFromVector(XMLoadFloat3(&mAngles));
 		newMatrix *= DirectX::XMMatrixScaling(mScale.x, mScale.y, mScale.z);
+		newMatrix *= XMMatrixRotationRollPitchYawFromVector(XMLoadFloat3(&mAngles));
 		newMatrix *= DirectX::XMMatrixTranslation(mPosition.x, mPosition.y, mPosition.z);
 		XMStoreFloat4x4(&mMatrix, newMatrix);
 		mIsDirty = false;
