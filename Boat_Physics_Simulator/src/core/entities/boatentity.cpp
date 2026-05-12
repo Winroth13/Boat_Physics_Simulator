@@ -54,8 +54,8 @@ void BoatEntity::UpdateSelf(double delta)
 	float angularAcceleration = inertia / momentOfInertia;
 	mAngularVelocity = angularAcceleration * delta;
 
-	constexpr float A = 2000.0f;
-	constexpr float k = 10.0f;
+	constexpr float A = 500.0f;
+	constexpr float k = 6.0f;
 	float waterInertia = A * (expf(k * mAngularVelocity) - 1);
 	float angularDeceleration = waterInertia / momentOfInertia;
 
