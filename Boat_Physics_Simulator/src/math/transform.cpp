@@ -318,20 +318,20 @@ const DirectX::XMFLOAT4X4 Transform::GetMatrixf()
 // Move in global space
 void Transform::MoveX(float distance)
 {
-	mPosition.x += distance,
-		mIsDirty = true;
+	mPosition.x += distance;
+	mIsDirty = true;
 }
 
 void Transform::MoveY(float distance)
 {
-	mPosition.y += distance,
-		mIsDirty = true;
+	mPosition.y += distance;
+	mIsDirty = true;
 }
 
 void Transform::MoveZ(float distance)
 {
-	mPosition.z += distance,
-		mIsDirty = true;
+	mPosition.z += distance;
+	mIsDirty = true;
 }
 
 // Move in local space
