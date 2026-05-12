@@ -97,8 +97,8 @@ public:
 		}
 
 		auto& cameraEntity = mScene->CreateEntity<CameraEntity>();
-		cameraEntity.transform.SetPosition(0, 8, -15);
-		cameraEntity.transform.SetPitch(DirectX::XMConvertToRadians(15));
+		cameraEntity.transform.SetPosition(0, 5.8, -8.7);
+		cameraEntity.transform.SetPitch(DirectX::XMConvertToRadians(18));
 		cameraEntity.Attach(&boatEntity);
 	};
 
