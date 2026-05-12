@@ -48,9 +48,9 @@ private:
 	static constexpr float WATER_DENSITY = 1000;
 	static constexpr float WATER_TEMPERATURE = 273.15f + 10;
 
-	static constexpr float BOAT_WIDTH = 3.0f;
-	static constexpr float BOAT_LENGTH = 6.0f;
-	static constexpr float BOAT_HEIGHT = 1.0f;
+	static constexpr float BOAT_WIDTH = 1.3f;
+	static constexpr float BOAT_LENGTH = 3.3f;
+	static constexpr float BOAT_HEIGHT = 0.5f;
 	static constexpr float BOAT_LENGTH_TO_MOTOR = 2.0f;
 
 	static constexpr float BOAT_MAX_TURN_ANGLE = DirectX::XMConvertToRadians(30);
