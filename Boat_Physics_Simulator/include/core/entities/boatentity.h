@@ -67,7 +67,7 @@ private:
 	float mForwardInputTimer = 0.0f;
 
 	float mTurnUserInput = 0.0f;
-	float mTurnTimeToMaxInput = 4.0f;
+	float mTurnTimeToMaxInput = 2.0f;
 	float mTurnInputTimer = mTurnTimeToMaxInput / 2.0f;
 
 	float GetTurnAngle() { return mTurnUserInput * BOAT_MAX_TURN_ANGLE; }
