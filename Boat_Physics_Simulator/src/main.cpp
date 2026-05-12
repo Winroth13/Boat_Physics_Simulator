@@ -53,30 +53,33 @@ public:
 		sunEntity.SetVisible(true);
 
 		auto& boatEntity = mScene->CreateEntity<BoatEntity>();
+		boatEntity.transform.SetPosition(0, 0.050f, 0);
 		inspectorEntity = &boatEntity;
 
-		auto boatModel = std::make_shared<OBJModel>("assets/cube/cube.obj", vShader);
+		auto boatModel = std::make_shared<OBJModel>("assets/motorboat/MotorBoat.obj", vShader);
 
 		auto& boatModelEntity = mScene->CreateEntity<ModelEntity>(boatModel);
 		boatModelEntity.Attach(&boatEntity);
 		boatModelEntity.SetName("Boat Model");
 		boatModelEntity.transform.SetPosition(0, 0, 0);
-		boatModelEntity.transform.SetScale(3, 1, 8);
+		boatModelEntity.transform.SetScale(1, 1, 1);
 
-		mScene->CreateEntity<ModelEntity>(boatModel).Attach(&boatEntity);
+		auto cubeModel = std::make_shared<OBJModel>("assets/cube/cube.obj", vShader);
+		mScene->CreateEntity<ModelEntity>(cubeModel).Attach(&boatEntity);
 
 		auto& motorHingeEntity = mScene->CreateEntity<Entity>();
 		motorHingeEntity.Attach(&boatEntity);
 		motorHingeEntity.SetName("Motor Hinge");
-		motorHingeEntity.transform.SetPosition(0, 0, -8.5f);
+		motorHingeEntity.transform.SetPosition(0, 0.6f, -3.3);
 
 		boatEntity.SetMotorHingeEntity(&motorHingeEntity);
 
-		auto& motorModelEntity = mScene->CreateEntity<ModelEntity>(boatModel);
+		auto boatEngineModel = std::make_shared<OBJModel>("assets/motorboat/MotorBoatEngine.obj", vShader);
+		auto& motorModelEntity = mScene->CreateEntity<ModelEntity>(boatEngineModel);
 		motorModelEntity.Attach(&motorHingeEntity);
 		motorModelEntity.SetName("Motor Model");
-		motorModelEntity.transform.SetPosition(0, 0, -0.5f);
-		motorModelEntity.transform.SetScale(0.4f, 1, 1);
+		motorModelEntity.transform.SetPosition(0, 0, 0);
+		motorModelEntity.transform.SetScale(1, 1, 1);
 
 		/* Ocean */
 		{
@@ -94,8 +97,8 @@ public:
 		}
 
 		auto& cameraEntity = mScene->CreateEntity<CameraEntity>();
-		cameraEntity.transform.SetPosition(0, 8, -15);
-		cameraEntity.transform.SetPitch(DirectX::XMConvertToRadians(15));
+		cameraEntity.transform.SetPosition(0, 5.8, -8.7);
+		cameraEntity.transform.SetPitch(DirectX::XMConvertToRadians(18));
 		cameraEntity.Attach(&boatEntity);
 	};
 
