@@ -16,6 +16,8 @@
 
 #include <Windows.h>
 
+using namespace DirectX;
+
 BoatEntity::BoatEntity()
 	: Entity("Boat")
 {
@@ -29,46 +31,63 @@ void BoatEntity::BeginSelf(RenderServer& renderServer)
 {
 }
 
-void BoatEntity::UpdateSelf(double delta)
+void BoatEntity::UpdateSelf(double deltaTime)
 {
-	mUpdateTimer += delta;
+	mUpdateTimer += deltaTime;
 
 	if (mUpdateTimer < UPDATE_RATE)
 		return;
 
 	mUpdateTimer -= UPDATE_RATE;
-	delta = static_cast<double>(UPDATE_RATE);
+	float delta = UPDATE_RATE;
 
-	Input(static_cast<float>(delta));
+	Input(delta);
 
-	mThrustForce = (mForwardUserInput * mTotalEfficiency * mEnginePower) /
-		(mHullEfficiency * mVelocity * (1 - mWakeFactor));
+    XMVECTOR velocity = XMLoadFloat3(&mVelocity);
+    XMVECTOR acceleration = XMLoadFloat3(&mAcceleration);
 
-	float turnAngle = GetTurnAngle();
+    float velocityScalar = XMVectorGetX(XMVector3Length(velocity));
 
-	mMotorHingeEntity->transform.SetYaw(-turnAngle);
+	/* Calculate Forward Thrust Force */
+	{
+        XMVECTOR forward = transform.GetForwardDir();
+        float velocityForwardScalar = XMVectorGetX(XMVector3Dot(velocity, forward));
 
-	float inertia = mThrustForce * sinf(turnAngle) * BOAT_LENGTH_TO_MOTOR;
-	float momentOfInertia = CalculateMomentOfInertia(BOAT_LENGTH, BOAT_WIDTH, mMass);
+        float numerator = (mForwardUserInput * mTotalEfficiency * mEnginePower);
+        float denominator = (mHullEfficiency * velocityForwardScalar * (1 - mWakeFactor));
+        mThrustForce = numerator / denominator;
+	}
 
-	float angularAcceleration = inertia / momentOfInertia;
-	mAngularVelocity = angularAcceleration * delta;
+    /* Calculate Angular Velocity */
+	{
+        float turnAngle = GetTurnAngle();
 
-	constexpr float A = 500.0f;
-	constexpr float k = 6.0f;
-	float waterInertia = A * (expf(k * mAngularVelocity) - 1);
-	float angularDeceleration = waterInertia / momentOfInertia;
+        mMotorHingeEntity->transform.SetYaw(-turnAngle);
 
-	mAngularVelocity -= angularDeceleration * delta;
+        float inertia = mThrustForce * sinf(turnAngle) * BOAT_LENGTH_TO_MOTOR;
+        float momentOfInertia = CalculateMomentOfInertia(BOAT_LENGTH, BOAT_WIDTH, mMass);
 
-	transform.RotateY(mAngularVelocity);
+        float angularAcceleration = inertia / momentOfInertia;
+        mAngularVelocity = angularAcceleration * delta;
+
+        constexpr float A = 500.0f;
+        constexpr float k = 6.0f;
+        float waterInertia = A * (expf(k * mAngularVelocity) - 1);
+        float angularDeceleration = waterInertia / momentOfInertia;
+
+        mAngularVelocity -= angularDeceleration * delta;
+
+        transform.RotateY(mAngularVelocity);
+        XMMATRIX rotationMatrix = XMMatrixRotationY(mAngularVelocity);
+        velocity = XMVector3Transform(velocity, rotationMatrix);
+	}
 
 	mWaterViscosity = CalculateWaterViscosity(WATER_TEMPERATURE, SALT_WATER_CONSTANT);
-
+    
 	mReynoldsNumber = CalculateReynolds(
 		WATER_DENSITY,
 		BOAT_LENGTH,
-		mVelocity,
+		velocityScalar,
 		mWaterViscosity
 	);
 
@@ -76,19 +95,29 @@ void BoatEntity::UpdateSelf(double delta)
 	float cr = 0.0f; // We don't care about dynamic waves
 	mCh = cf + cr;
 
-	constexpr float AREA_UNDER_WATER_RATIO = 0.5f; // TODO: Do not hardcode this
+	float ratio = (BOAT_HEIGHT / 2.0f - transform.GetPosition3f().y) / BOAT_HEIGHT;
+    ratio = ratio < 0.0f ? 0.0f : ratio > 1.0f ? 1.0f : ratio;
 	mWaterDragForce = CalculateWaterDragForce(
 		WATER_DENSITY,
-		(BOAT_WIDTH * BOAT_HEIGHT) * AREA_UNDER_WATER_RATIO,
+		(BOAT_WIDTH * BOAT_HEIGHT) * ratio,
 		mCh,
-		mVelocity
+        velocityScalar
 	);
 
-	mAcceleration = (mThrustForce - mWaterDragForce) / mMass;
+    float accelerationForwardScalar = (mThrustForce - mWaterDragForce) / mMass;
+    acceleration = accelerationForwardScalar * transform.GetForwardDir(); // Forward Thrust Force
+    acceleration -= XMVectorSet(0, GRAVITY, 0, 0);
 
-	mVelocity += mAcceleration * static_cast<float>(delta);
+    acceleration += WATER_DENSITY * (BOAT_WIDTH * BOAT_LENGTH * BOAT_HEIGHT * ratio) / mMass * XMVectorSet(0, GRAVITY, 0, 0);
 
-	transform.MoveForward(mVelocity * static_cast<float>(delta));
+    velocity += acceleration * delta;
+
+    XMStoreFloat3(&mVelocity, velocity);
+    XMStoreFloat3(&mAcceleration, acceleration);
+
+    transform.MoveX(mVelocity.x * delta);
+	transform.MoveY(mVelocity.y * delta);
+    transform.MoveZ(mVelocity.z * delta);
 }
 
 void BoatEntity::RenderSelf(RenderServer& renderServer)
@@ -132,53 +161,6 @@ void BoatEntity::Input(float delta) {
 	mTurnUserInput = (mTurnInputTimer / mTurnTimeToMaxInput) * 2.0f - 1.0f;
 }
 
-static void DragPercentage(const std::string& name, float& val)
-{
-	float percentage = val * 100.0f;
-	if (ImGui::DragFloat(name.c_str(), &percentage, 0.01f, 0, 100, "%.2f %%"))
-	{
-		val = percentage / 100.0f;
-	}
-}
-
-float BoatEntity::CalculateWaterViscosity(float waterTemperature, float waterViscosityFactor)
-{
-	float exponent = 570.6f / (waterTemperature - 140);
-	return 2.41e-5f * expf(exponent) * waterViscosityFactor;
-}
-
-float BoatEntity::CalculateReynolds(
-	float waterDensity,
-	float boatLength,
-	float boatVelocity,
-	float viscosity
-)
-{
-	return (waterDensity * boatLength * boatVelocity) / viscosity;
-}
-
-float BoatEntity::CalculateCf(float reynoldsNumber)
-{
-	return 3.0f / (40.0f * powf(log10f(reynoldsNumber) - 2.0f, 2.0f));
-}
-
-float BoatEntity::CalculateWaterDragForce(
-	float waterDensity,
-	float areaUnderWater,
-	float CH,
-	float boatVelocity
-)
-{
-	return 0.5f * waterDensity * areaUnderWater * CH * powf(boatVelocity, 2);
-}
-
-float BoatEntity::CalculateMomentOfInertia(float length, float width, float mass)
-{
-	float I = mass / 48.0f;
-	I *= (4 * powf(length, 2) + 3 * powf(width, 2));
-	return I;
-}
-
 void BoatEntity::RenderImguiSelf()
 {
 	ImGui::TextColored(ImVec4(0, 1, 0, 1), "Reynolds: %.2f", mReynoldsNumber);
@@ -220,10 +202,10 @@ void BoatEntity::RenderImguiSelf()
 
 	if (ImGui::TreeNodeEx("Motion", TREE_NODE_FLAGS))
 	{
-		ImGui::DragFloat("Velocity", &mVelocity, 0.01f, 0, FLT_MAX, "%.1f m/s");
-		ImGui::DragFloat("Acceleration", &mAcceleration, 0.01f, 0, FLT_MAX, "%.1f m/s");
+		ImGui::DragFloat3("Velocity", &mVelocity.x, 0.01f, 0, FLT_MAX, "%.1f m/s");
+		ImGui::DragFloat3("Acceleration", &mAcceleration.x, 0.01f, 0, FLT_MAX, "%.1f m/s^2");
 
-		ImGui::DragFloat("Angular Velocity", &mAngularVelocity, 0.01f, 0, FLT_MAX, "%.1f m/s");
+		ImGui::DragFloat("Angular Velocity", &mAngularVelocity, 0.01f, 0, FLT_MAX, "%.1f rad/s");
 		ImGui::TreePop();
 	}
 }

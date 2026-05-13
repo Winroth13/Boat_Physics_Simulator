@@ -72,6 +72,8 @@ public:
 	const DirectX::XMMATRIX GetMatrix();
 	const DirectX::XMFLOAT4X4 GetMatrixf();
 
+    const DirectX::XMMATRIX GetRotationMatrix();
+
 	// Move in global space
 	void MoveX(float distance);
 	void MoveY(float distance);

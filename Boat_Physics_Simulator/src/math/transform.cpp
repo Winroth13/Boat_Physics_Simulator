@@ -315,6 +315,11 @@ const DirectX::XMFLOAT4X4 Transform::GetMatrixf()
 	return mMatrix;
 }
 
+const DirectX::XMMATRIX Transform::GetRotationMatrix()
+{
+    return DirectX::XMMatrixRotationRollPitchYawFromVector(XMLoadFloat3(&mAngles));
+}
+
 // Move in global space
 void Transform::MoveX(float distance)
 {

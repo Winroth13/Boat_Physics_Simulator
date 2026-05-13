@@ -48,6 +48,7 @@
     <ClInclude Include="include\graphics\shaders\geometryshader.h" />
     <ClInclude Include="include\graphics\shaders\hullshader.h" />
     <ClInclude Include="include\math\aabb.h" />
+    <ClInclude Include="include\math\boatmaths.h" />
     <ClInclude Include="include\math\mathfunctions.h" />
     <ClInclude Include="include\math\transform.h" />
     <ClInclude Include="include\core\window.h" />
@@ -90,6 +91,7 @@
   <ItemGroup>
     <ClCompile Include="src\core\entities\boatentity.cpp" />
     <ClCompile Include="src\core\entities\particleentity.cpp" />
+    <ClCompile Include="src\core\imguiflags.cpp" />
     <ClCompile Include="src\core\renderer\aabbrenderer.cpp" />
     <ClCompile Include="src\core\renderer\linerenderer.cpp" />
     <ClCompile Include="src\core\renderer\particlerenderer.cpp" />
@@ -115,6 +117,7 @@
     <ClCompile Include="src\graphics\shaders\geometryshader.cpp" />
     <ClCompile Include="src\graphics\shaders\hullshader.cpp" />
     <ClCompile Include="src\math\aabb.cpp" />
+    <ClCompile Include="src\math\boatmaths.cpp" />
     <ClCompile Include="src\math\mathfunctions.cpp" />
     <ClCompile Include="src\math\transform.cpp" />
     <ClCompile Include="src\core\window.cpp" />
