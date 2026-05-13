@@ -31,6 +31,20 @@ cbuffer cbPerView : register(b1)
     float pad1;
 }
 
+cbuffer cbPerMaterial : register(b3)
+{
+    float3 ambientCoefficient;
+    float phongExponent;
+    float3 diffuseCoefficient;
+    float reflectiveness;
+    float3 specularCoefficient;
+    uint materialFlags;
+    float maxTessFactor;
+    float maxTessDistance;
+    float minTessDistance;
+    float dispStrength;
+}
+
 Texture2D displaceTexture : register(t6);
 
 SamplerState samplerState : register(s0);
@@ -67,7 +81,7 @@ DomainShaderOutput main(
     
     // TODO: The displacement texture is RGB right now, becasue it breaks otherwise.
     float heightOffset = -0.5f + displaceTexture.SampleLevel(samplerState, output.uv, 0).r;
-    heightOffset *= 0.05f;
+    heightOffset *= dispStrength;
     float3 displacedPos = output.worldPosition + output.worldNormal * heightOffset;
     
     output.position = mul(viewProjMatrix, float4(displacedPos, 1.0f));

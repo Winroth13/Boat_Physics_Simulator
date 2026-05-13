@@ -35,7 +35,7 @@ cbuffer cbPerMaterial : register(b3)
     float maxTessFactor;
     float maxTessDistance;
     float minTessDistance;
-    float pad1;
+    float dispStrength;
 }
 
 cbuffer cbMateralIndex : register(b4)

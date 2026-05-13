@@ -44,7 +44,7 @@ cbuffer cbPerMaterial : register(b3)
     float maxTessFactor;
     float maxTessDistance;
     float minTessDistance;
-    float pad0;
+    float dispStrength;
 }
 
 #define NUM_CONTROL_POINTS 3

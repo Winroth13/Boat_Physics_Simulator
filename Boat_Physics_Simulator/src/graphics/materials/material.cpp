@@ -90,6 +90,12 @@ void Material::SetMinTessDistance(const float minTessDistance)
 	mIsDirty = true;
 }
 
+void Material::SetDispStrength(const float dispSttrength)
+{
+	mDispStrength = dispSttrength;
+	mIsDirty = true;
+}
+
 void Material::SetNormalMap(std::shared_ptr<Texture2D> normalMap)
 {
 	mNormalMap = normalMap;

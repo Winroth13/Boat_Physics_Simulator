@@ -1515,6 +1515,7 @@ void Renderer::RenderShadowMeshAndMaterial(GeometryData& geometryData, MaterialD
 		mImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
 		BindHullShader(mShadowTessellationHullShader);
 		BindPerMaterialBuffer(ShaderType::HULL);
+		BindPerMaterialBuffer(ShaderType::DOMAIN_SHADER);
 		BindDomainShader(mShadowDisplacementDomainShader);
 		BindTexture2D(mat->GetDisplacementMap(), DISPLACEMENT_TEXTURE_SLOT, ShaderType::DOMAIN_SHADER);
 	}
@@ -1582,6 +1583,7 @@ void Renderer::RenderDeferredMeshAndMaterial(
 		mImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
 		BindHullShader(mTessellationHullShader);
 		BindPerMaterialBuffer(ShaderType::HULL);
+		BindPerMaterialBuffer(ShaderType::DOMAIN_SHADER);
 		BindDomainShader(mDisplacementDomainShader);
 		BindTexture2D(mat->GetDisplacementMap(), DISPLACEMENT_TEXTURE_SLOT, ShaderType::DOMAIN_SHADER);
 	}
@@ -1630,6 +1632,7 @@ void Renderer::UpdatePerMaterialBuffer(std::shared_ptr<Material> material)
 	perMatBuffer.maxTessFactor = material->GetMaxTessFactor();
 	perMatBuffer.maxTessDistance = material->GetMaxTessDistance();
 	perMatBuffer.minTessDistance = material->GetMinTessDistance();
+	perMatBuffer.dispStrength = material->SetDispStrength();
 
 	mImmediateContext->UpdateSubresource(mPerMaterialBuffer, 0, NULL, &perMatBuffer, 0, 0);
 }
@@ -1704,6 +1707,9 @@ void Renderer::BindPerMaterialBuffer(ShaderType shaderType)
 		break;
 	case ShaderType::HULL:
 		mImmediateContext->HSSetConstantBuffers(PER_MATERIAL, 1, &mPerMaterialBuffer);
+		break;
+	case ShaderType::DOMAIN_SHADER:
+		mImmediateContext->DSSetConstantBuffers(PER_MATERIAL, 1, &mPerMaterialBuffer);
 		break;
 	case ShaderType::PIXEL:
 		mImmediateContext->PSSetConstantBuffers(PER_MATERIAL, 1, &mPerMaterialBuffer);

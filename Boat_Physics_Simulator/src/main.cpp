@@ -41,6 +41,8 @@ public:
 	Entity* inspectorEntity = nullptr;
 
 	Entity* cameraEntity;
+	Entity* ocean;
+	Entity* boat;
 
 	POINT previousMousePos;
 
@@ -60,6 +62,7 @@ public:
 		auto& boatEntity = mScene->CreateEntity<BoatEntity>();
 		boatEntity.transform.SetPosition(0, 0.050f, 0);
 		inspectorEntity = &boatEntity;
+		boat = &boatEntity;
 
 		auto boatModel = std::make_shared<OBJModel>("assets/motorboat/MotorBoat.obj", vShader);
 
@@ -88,17 +91,18 @@ public:
 
 		/* Ocean */
 		{
-			auto oceanMesh = std::make_shared<QuadMesh>(1024.0f, 128.0f);
-			oceanMesh->SetName("Ocean Mesh");
-			auto oceanTexture = std::make_shared<ImageTexture2D>("assets/ocean/water_diffuse.jpg");
+			auto vShaderWater = std::make_shared<VertexShader>("resources/WaterVertexShader.cso");
 
-			auto oceanMaterial = std::make_shared<Material>(vShader, oceanTexture);
-			oceanMaterial->SetName("Ocean Material");
+			auto oceanModel = std::make_shared<OBJModel>("assets/ocean/ocean.obj", vShaderWater);
+			std::shared_ptr<Material> oceanMaterial = oceanModel->GetMaterialByName("Ocean");
+			oceanMaterial->SetMaxTessFactor(40.0f);
+			oceanMaterial->SetMinTessDistance(101.0f);
+			oceanMaterial->SetMaxTessDistance(100.0f);
+			oceanMaterial->SetDispStrength(0.5f);
 
-			auto oceanModel = std::make_shared<Model>(oceanMesh, oceanMaterial);
-
-			auto& oceanModelEntity = mScene->CreateEntity<ModelEntity>(oceanModel);
-			oceanModelEntity.SetName("Ocean");
+			auto& oceanEntity = mScene->CreateEntity<ModelEntity>(oceanModel);
+			oceanEntity.transform.SetScale(100.0f, 1.0f, 100.0f);
+			ocean = &oceanEntity;
 		}
 
 		auto& cameraEntity = mScene->CreateEntity<CameraEntity>();
@@ -185,6 +189,11 @@ public:
 
 			previousMousePos = newMousePos;
 		}
+
+		/* Make water follow the boat */
+		DirectX::XMFLOAT3 boatPos = boat->transform.GetPosition3f();
+		DirectX::XMFLOAT3 oceanPos = ocean->transform.GetPosition3f();
+		ocean->transform.SetPosition(boatPos.x, oceanPos.y, boatPos.z);
 	};
 
 	void Render(RenderServer& renderServer) override

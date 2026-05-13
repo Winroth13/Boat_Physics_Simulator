@@ -41,6 +41,7 @@ public:
 	void SetMaxTessFactor(const float maxTessFactor);
 	void SetMaxTessDistance(const float maxTessDistance);
 	void SetMinTessDistance(const float minTessDistance);
+	void SetDispStrength(const float dispSttrength);
 
 	void SetCubemapTexture(std::shared_ptr<CubemapTexture> cubemapTexture) { mCubemapTexture = cubemapTexture; }
 	void SetNormalMap(std::shared_ptr<Texture2D> normalMap);
@@ -62,6 +63,7 @@ public:
 	inline float& GetMaxTessFactor() { return mMaxTessFactor; }
 	inline float& GetMaxTessDistance() { return mMaxTessDistance; }
 	inline float& GetMinTessDistance() { return mMinTessDistance; }
+	inline float& SetDispStrength() { return mDispStrength; }
 
 	bool HasAlpha() const;
 	bool HasDisplacement() const;
@@ -78,6 +80,7 @@ private:
 	float mMaxTessFactor = 1.0f;
 	float mMaxTessDistance = 0.0f;
 	float mMinTessDistance = 1.0f;
+	float mDispStrength = 0.05f;
 
 	std::string mName;
 

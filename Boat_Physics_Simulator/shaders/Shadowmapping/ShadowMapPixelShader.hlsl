@@ -16,6 +16,10 @@ cbuffer cbPerMaterial : register(b3)
     float reflectiveness;
     float3 specularCoefficient;
     uint materialFlags;
+    float maxTessFactor;
+    float maxTessDistance;
+    float minTessDistance;
+    float dispStrength;
 }
 
 Texture2D alphaTexture : register(t7);

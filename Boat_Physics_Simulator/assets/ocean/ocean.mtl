@@ -1,0 +1,12 @@
+newmtl Ocean
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Kd 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd textures/Water_001_COLOR.jpg
+norm textures/Water_001_NORM.jpg
+map_Ka textures/Water_001_COLOR.jpg
+disp textures/Water_001_DISP.png

@@ -88,7 +88,7 @@ struct PerMaterial
 	float maxTessFactor;
 	float maxTessDistance;
 	float minTessDistance;
-	float pad0;
+	float dispStrength;
 };
 
 struct MaterialIndexBuffer
