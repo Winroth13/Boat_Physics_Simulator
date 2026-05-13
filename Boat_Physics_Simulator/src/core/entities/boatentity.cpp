@@ -187,7 +187,7 @@ void BoatEntity::RenderImguiSelf()
 	if (ImGui::TreeNodeEx("Constants", TREE_NODE_FLAGS))
 	{
 		ImGui::DragFloat("Wake Factor", &mWakeFactor, 0.001f, 0, 0.99f);
-		ImGui::DragFloat("Mass", &mMass, 1, 0, FLT_MAX, "%.2f kg");
+		ImGui::DragFloat("Mass", &mMass, 1, 0.1f, FLT_MAX, "%.2f kg");
 		// TODO: Other constants
 
 		/* Total Efficiency */
@@ -207,5 +207,11 @@ void BoatEntity::RenderImguiSelf()
 
 		ImGui::DragFloat("Angular Velocity", &mAngularVelocity, 0.01f, 0, FLT_MAX, "%.1f rad/s");
 		ImGui::TreePop();
+
+        int zero = 0;
+        static bool matias = false;
+        if (ImGui::Checkbox("Matias", &matias))
+            if (matias)
+                float a = 1 / zero;
 	}
 }
