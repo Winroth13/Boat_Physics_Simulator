@@ -45,7 +45,7 @@ struct Material
     float maxTessFactor;
     float maxTessDistance;
     float minTessDistance;
-    float pad1;
+    float dispStrength;
 };
 
 // Constant buffers
