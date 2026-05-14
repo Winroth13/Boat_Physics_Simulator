@@ -7,23 +7,29 @@
 PointCloud::PointCloud(const std::string& pointCloudPath, float totalMass)
 {
 	ReadPoints(pointCloudPath);
-	mTotalMass = totalMass;
-	mPointMass = mTotalMass / mPoints.size();
+	mPointMass = totalMass / mPoints.size();
 }
 
 PointCloud::PointCloud(const std::string& pointCloudPath, float pointRadius, float density)
 {
+	mPointRadius = pointRadius;
+
 	ReadPoints(pointCloudPath);
-	float pointVolume = (4.0f / 3.0f) * DirectX::XM_PI * powf(pointRadius, 3);
+	float pointVolume = GetPointVolume();
     float totalVolume = pointVolume * mPoints.size();
 
-	mTotalMass = totalVolume * density;
 	mPointMass = pointVolume * density;
 }
 
 PointCloud::~PointCloud()
 {
 
+}
+
+void PointCloud::AddPoint(Point point)
+{
+	mPoints.push_back(point);
+	mBounds.Expand(point.position);
 }
 
 void PointCloud::ReadPoints(std::string path)
@@ -49,6 +55,14 @@ void PointCloud::ReadPoints(std::string path)
 
 	auto& vertices = reader.GetAttrib().vertices;
 
+	mBounds = AABB(
+		{
+			vertices[0], 
+			vertices[1], 
+			vertices[2]
+		}
+	);
+
 	for (size_t i = 0; i < vertices.size(); i += 3)
 	{
 		float x = vertices[i + 0];
@@ -58,5 +72,7 @@ void PointCloud::ReadPoints(std::string path)
 		Point point;
 		point.position = { x, y, z };
 		mPoints.push_back(point);
+
+		mBounds.Expand(point.position);
 	}
 }

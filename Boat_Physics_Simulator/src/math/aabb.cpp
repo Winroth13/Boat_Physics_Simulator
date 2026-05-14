@@ -8,6 +8,12 @@ AABB::AABB()
 {
 }
 
+AABB::AABB(const DirectX::XMFLOAT3& point)
+{
+	mMin = point;
+	mMax = point;
+}
+
 AABB::AABB(const DirectX::BoundingBox& boundingBox)
 {
 	mMin.x = boundingBox.Center.x - boundingBox.Extents.x;

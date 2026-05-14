@@ -5,6 +5,7 @@
 struct AABB
 {
 	AABB();
+	AABB(const DirectX::XMFLOAT3& point);
 	AABB(const DirectX::BoundingBox& boundingBox);
 
 	DirectX::XMFLOAT3 mMin = { 0, 0, 0 };

@@ -36,17 +36,26 @@ void BoatEntity::BeginSelf(RenderServer& renderServer)
 
 	PointCloud boatCloud("assets/pointclouds/point_cloud_boat.obj", 1000);
 	PointCloud airCloud("assets/pointclouds/point_cloud_air.obj", 0.14f, 1.225f);
-	PointCloud engineCloud("assets/pointclouds/point_cloud_engine.obj", 0.14, 7850.f);
+	PointCloud engineCloud("assets/pointclouds/point_cloud_engine.obj", 200);
 
-	mPointClouds.push_back(boatCloud);
-	mPointClouds.push_back(airCloud);
-	mPointClouds.push_back(engineCloud);
+	boatCloud.SetPointRadius(0.09f);
+	engineCloud.SetPointRadius(0.14f);
+
+	mPointClouds.resize((int)PointCloudType::COUNT);
+
+	mPointClouds[static_cast<int>(PointCloudType::BOAT)] = boatCloud;
+	mPointClouds[static_cast<int>(PointCloudType::AIR)] = airCloud;
+	mPointClouds[static_cast<int>(PointCloudType::ENGINE)] = engineCloud;
 
 	mCenterOfMass = CalculateCenterOfMass(mPointClouds);
+	mMass = boatCloud.GetTotalMass() + engineCloud.GetTotalMass();
 }
 
 void BoatEntity::UpdateSelf(double deltaTime)
 {
+	if (mPause)
+		return;
+
 	mUpdateTimer += deltaTime;
 
 	if (mUpdateTimer < UPDATE_RATE)
@@ -78,8 +87,18 @@ void BoatEntity::UpdateSelf(double deltaTime)
 
         mMotorHingeEntity->transform.SetYaw(-turnAngle);
 
-        float inertia = mThrustForce * sinf(turnAngle) * BOAT_LENGTH_TO_MOTOR;
-        float momentOfInertia = CalculateMomentOfInertia(BOAT_LENGTH, BOAT_WIDTH, mMass);
+		XMFLOAT3 propellerGlobalPosition = mPropellerEntity->GetGlobalPosition();
+		propellerGlobalPosition.y = 0.0f;
+
+		XMVECTOR centerOfMass = XMLoadFloat3(&mCenterOfMass);
+		centerOfMass = XMVectorSetY(centerOfMass, 0);
+
+		XMVECTOR propellerPosition = XMLoadFloat3(&propellerGlobalPosition);
+		XMVECTOR center = XMVector3Transform(centerOfMass, transform.GetMatrix());
+		float distanceToCenter = XMVectorGetX(XMVector3Length(propellerPosition - center));
+
+        float inertia = mThrustForce * sinf(turnAngle) * distanceToCenter;
+        float momentOfInertia = CalculateMomentOfInertia(GetBoatLength(), GetBoatWidth(), mMass);
 
         float angularAcceleration = inertia / momentOfInertia;
         mAngularVelocity = angularAcceleration * delta;
@@ -100,7 +119,7 @@ void BoatEntity::UpdateSelf(double deltaTime)
     
 	mReynoldsNumber = CalculateReynolds(
 		WATER_DENSITY,
-		BOAT_LENGTH,
+		GetBoatLength(),
 		velocityScalar,
 		mWaterViscosity
 	);
@@ -109,11 +128,11 @@ void BoatEntity::UpdateSelf(double deltaTime)
 	float cr = 0.0f; // We don't care about dynamic waves
 	mCh = cf + cr;
 
-	float ratio = (BOAT_HEIGHT / 2.0f - transform.GetPosition3f().y) / BOAT_HEIGHT;
+	float ratio = (GetBoatHeight() / 2.0f - transform.GetPosition3f().y) / GetBoatHeight();
     ratio = ratio < 0.0f ? 0.0f : ratio > 1.0f ? 1.0f : ratio;
 	mWaterDragForce = CalculateWaterDragForce(
 		WATER_DENSITY,
-		(BOAT_WIDTH * BOAT_HEIGHT) * ratio,
+		(GetBoatWidth() * GetBoatHeight()) * ratio,
 		mCh,
         velocityScalar
 	);
@@ -122,7 +141,9 @@ void BoatEntity::UpdateSelf(double deltaTime)
     acceleration = accelerationForwardScalar * transform.GetForwardDir(); // Forward Thrust Force
     acceleration -= XMVectorSet(0, GRAVITY, 0, 0);
 
-    acceleration += WATER_DENSITY * (BOAT_WIDTH * BOAT_LENGTH * BOAT_HEIGHT * ratio) / mMass * XMVectorSet(0, GRAVITY, 0, 0);
+	float volumeUnderWater = GetBoatWidth() * GetBoatLength() * GetBoatHeight() * ratio;
+
+    acceleration += WATER_DENSITY * volumeUnderWater / mMass * XMVectorSet(0, GRAVITY, 0, 0);
 
     velocity += acceleration * delta;
 
@@ -145,7 +166,12 @@ void BoatEntity::RenderSelf(RenderServer& renderServer)
 	renderServer.PushMesh(mSphereModel->GetMesh(0), pTransform.GetMatrix() * transform.GetMatrix());
 	renderServer.PushMaterial(mSphereModel->GetMaterial(0));
 
-	/*for (auto& point : mPointClouds[2].GetPoints())
+	PointCloud above;
+	PointCloud below;
+
+	SplitPointCloud(GetPointCloud(PointCloudType::BOAT), transform.GetMatrix(), 0.0f, above, below);
+
+	for (auto& point : above.GetPoints())
 	{
 		Transform pTransform;
 		pTransform.SetPosition(point.position);
@@ -153,7 +179,7 @@ void BoatEntity::RenderSelf(RenderServer& renderServer)
 
 		renderServer.PushMesh(mSphereModel->GetMesh(0), pTransform.GetMatrix() * transform.GetMatrix());
 		renderServer.PushMaterial(mSphereModel->GetMaterial(0));
-	}*/
+	}
 }
 
 static inline bool IsKeyDown(int vKey)
@@ -195,6 +221,8 @@ void BoatEntity::Input(float delta) {
 
 void BoatEntity::RenderImguiSelf()
 {
+	ImGui::Checkbox("Pause", &mPause);
+
 	ImGui::TextColored(ImVec4(0, 1, 0, 1), "Reynolds: %.2f", mReynoldsNumber);
 	ImGui::TextColored(ImVec4(0, 1, 0, 1), "Water Viscosity %f pas", mWaterViscosity);
 	ImGui::TextColored(ImVec4(0, 1, 0, 1), "CH %f", mCh);
@@ -218,8 +246,13 @@ void BoatEntity::RenderImguiSelf()
 
 	if (ImGui::TreeNodeEx("Constants", TREE_NODE_FLAGS))
 	{
+		ImGui::Text("Boat Width: %.2f m", GetBoatWidth());
+		ImGui::Text("Boat Height: %.2f m", GetBoatHeight());
+		ImGui::Text("Boat Length: %.2f m", GetBoatLength());
+
+		ImGui::Text("Boat Mass: %.2f kg", mMass);
+
 		ImGui::DragFloat("Wake Factor", &mWakeFactor, 0.001f, 0, 0.99f);
-		ImGui::DragFloat("Mass", &mMass, 1, 0.1f, FLT_MAX, "%.2f kg");
 		// TODO: Other constants
 
 		/* Total Efficiency */

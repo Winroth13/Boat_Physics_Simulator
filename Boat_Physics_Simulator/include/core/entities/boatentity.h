@@ -15,6 +15,7 @@ public:
     ~BoatEntity();
 
     void SetMotorHingeEntity(Entity* e) { mMotorHingeEntity = e; }
+    void SetPropellerEntity(Entity* e) { mPropellerEntity = e; }
 
 protected:
     virtual void BeginSelf(RenderServer& renderServer) override;
@@ -25,6 +26,22 @@ protected:
     virtual void RenderImguiSelf() override;
 
 private:
+    enum class PointCloudType
+    {
+        BOAT,
+        AIR,
+        ENGINE,
+
+        COUNT
+    };
+
+    PointCloud& GetPointCloud(PointCloudType type) { return mPointClouds[static_cast<int>(type)]; }
+
+    float GetBoatLength() { return GetPointCloud(PointCloudType::BOAT).GetLength(); }
+    float GetBoatWidth()  { return GetPointCloud(PointCloudType::BOAT).GetWidth();  }
+    float GetBoatHeight() { return GetPointCloud(PointCloudType::BOAT).GetHeight(); }
+
+private:
     static constexpr float UPDATE_RATE = 1 / 60.0f;
     static constexpr float GRAVITY = 9.82f;
 
@@ -32,11 +49,6 @@ private:
     static constexpr float FRESH_WATER_CONSTANT = 1;
     static constexpr float WATER_DENSITY = 1000;
     static constexpr float WATER_TEMPERATURE = 273.15f + 10;
-
-    static constexpr float BOAT_WIDTH = 1.3f;
-    static constexpr float BOAT_LENGTH = 3.3f;
-    static constexpr float BOAT_HEIGHT = 0.5f;
-    static constexpr float BOAT_LENGTH_TO_MOTOR = BOAT_LENGTH / 2;
 
     static constexpr float BOAT_MAX_TURN_ANGLE = DirectX::XMConvertToRadians(30);
 
@@ -47,6 +59,7 @@ private:
     std::vector<PointCloud> mPointClouds;
 
     Entity* mMotorHingeEntity = nullptr;
+    Entity* mPropellerEntity = nullptr;
 
     float mUpdateTimer = 0.0f;
 
@@ -85,4 +98,6 @@ private:
     float mWaterViscosity = 0.0f;
     float mReynoldsNumber = 0.0f;
     float mCh = 0.0f;
+
+    bool mPause = false;
 };
