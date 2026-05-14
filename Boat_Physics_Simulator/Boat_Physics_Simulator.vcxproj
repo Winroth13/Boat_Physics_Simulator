@@ -50,6 +50,7 @@
     <ClInclude Include="include\math\aabb.h" />
     <ClInclude Include="include\math\boatmaths.h" />
     <ClInclude Include="include\math\mathfunctions.h" />
+    <ClInclude Include="include\math\pointcloud.h" />
     <ClInclude Include="include\math\transform.h" />
     <ClInclude Include="include\core\window.h" />
     <ClInclude Include="include\graphics\camera.h" />
@@ -119,6 +120,7 @@
     <ClCompile Include="src\math\aabb.cpp" />
     <ClCompile Include="src\math\boatmaths.cpp" />
     <ClCompile Include="src\math\mathfunctions.cpp" />
+    <ClCompile Include="src\math\pointcloud.cpp" />
     <ClCompile Include="src\math\transform.cpp" />
     <ClCompile Include="src\core\window.cpp" />
     <ClCompile Include="src\graphics\camera.cpp" />
@@ -183,10 +185,6 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-    </FxCompile>
-    <FxCompile Include="shaders\Displacement\ShadowMapDisplacementDomainShader.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Domain</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Domain</ShaderType>
     </FxCompile>
     <FxCompile Include="shaders\Displacement\DisplacementDomainShader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Domain</ShaderType>
@@ -254,12 +252,6 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
     </FxCompile>
-    <FxCompile Include="shaders\Shadowmapping\ShadowMapVertexShader.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
-    </FxCompile>
     <FxCompile Include="shaders\Displacement\TessellationHullShader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Hull</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
@@ -274,10 +266,6 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
-    </FxCompile>
-    <FxCompile Include="shaders\Displacement\ShadowMapTessellationHullShader.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Hull</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Hull</ShaderType>
     </FxCompile>
     <FxCompile Include="shaders\Sprites\SpriteGeometryShader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Geometry</ShaderType>

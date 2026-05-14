@@ -39,3 +39,37 @@ float CalculateMomentOfInertia(float length, float width, float mass)
     I *= (4 * powf(length, 2) + 3 * powf(width, 2));
     return I;
 }
+
+DirectX::XMFLOAT3 CalculateCenterOfMass(std::vector<PointCloud>& pointClouds)
+{
+    float totalMass = 0;
+    DirectX::XMFLOAT3 totalPoint = { 0,0,0 };
+
+    for (auto& pointCloud : pointClouds)
+    {
+        auto& points = pointCloud.GetPoints();
+
+        DirectX::XMFLOAT3 sum = { 0.0f, 0.0f, 0.0f };
+        for (auto& point : points)
+        {
+            sum.x += point.position.x;
+            sum.y += point.position.y;
+			sum.z += point.position.z;
+        }
+        sum.x /= points.size();
+        sum.y /= points.size();
+        sum.z /= points.size();
+
+        totalMass += pointCloud.GetTotalMass();
+        totalPoint.x += sum.x * pointCloud.GetTotalMass();
+        totalPoint.y += sum.x * pointCloud.GetTotalMass();
+        totalPoint.z += sum.x * pointCloud.GetTotalMass();
+    }
+
+    DirectX::XMFLOAT3 center = { 0,0,0 };
+    center.x = totalPoint.x / totalMass;
+    center.y = totalPoint.y / totalMass;
+    center.z = totalPoint.z / totalMass;
+
+    return center;
+}

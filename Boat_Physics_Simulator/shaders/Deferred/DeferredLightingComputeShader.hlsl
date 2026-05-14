@@ -45,7 +45,7 @@ struct Material
     float maxTessFactor;
     float maxTessDistance;
     float minTessDistance;
-    float pad1;
+    float dispStrength;
 };
 
 // Constant buffers
@@ -85,7 +85,7 @@ sampler shadowMapSampler : register(s1);
 #define	SHOW_GBUFFERS 2
 #define	USE_BLINN_PHONG 4
 
-#define SHADOW_MAP_BIAS 0.01
+#define SHADOW_MAP_BIAS 0.001
 #define SHADOW_SAMPLES_DIMENTIONS 6
 #define SHADOW_OFFSET_STRENGTH 0.003f
 #define DIRECTIONAL_SHADOW_OFFSET_STRENGTH 0.001f

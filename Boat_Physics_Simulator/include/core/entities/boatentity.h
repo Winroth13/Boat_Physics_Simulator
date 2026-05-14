@@ -1,9 +1,11 @@
 #pragma once
 #include "core/entities/entity.h"
 #include "core/entities/modelentity.h"
-
 #include "math/boatmaths.h"
 
+#include "graphics/models/objmodel.h"
+
+#include <memory>
 #include <DirectXMath.h>
 
 class BoatEntity : public Entity
@@ -37,6 +39,12 @@ private:
     static constexpr float BOAT_LENGTH_TO_MOTOR = BOAT_LENGTH / 2;
 
     static constexpr float BOAT_MAX_TURN_ANGLE = DirectX::XMConvertToRadians(30);
+
+    DirectX::XMFLOAT3 mCenterOfMass;
+
+    std::unique_ptr<OBJModel> mSphereModel;
+
+    std::vector<PointCloud> mPointClouds;
 
     Entity* mMotorHingeEntity = nullptr;
 
