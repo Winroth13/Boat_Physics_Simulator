@@ -87,7 +87,7 @@ sampler shadowMapSampler : register(s1);
 #define	SHOW_GBUFFERS 2
 #define	USE_BLINN_PHONG 4
 
-#define SHADOW_MAP_BIAS 0.01
+#define SHADOW_MAP_BIAS 0.001
 #define SHADOW_SAMPLES_DIMENTIONS 6
 #define SHADOW_OFFSET_STRENGTH 0.003f
 #define DIRECTIONAL_SHADOW_OFFSET_STRENGTH 0.001f
@@ -197,9 +197,19 @@ float calcShadowFactor(
         for (int y = -SHADOW_SAMPLES_DIMENTIONS / 2; y <= SHADOW_SAMPLES_DIMENTIONS / 2; y++)
         {
             uint offsetIndex = numSamples % 15;
+            
+            float2 realOffset;
 
-            float2 realOffset = float2(x * (1.0f / width), y * (1.0f / height));
-            realOffset += offsets[offsetIndex] * offsetStrength;
+            if (x != 0 || y != 0)
+            {
+                realOffset = float2(x * (1.0f / width), y * (1.0f / height));
+                realOffset += offsets[offsetIndex] * offsetStrength;
+            }
+            else
+            {
+                realOffset = float2(0.0f, 0.0f);
+            }
+            
             float3 uvc = float3(uv + realOffset, index);
             float closestDepth = texArr.SampleLevel(shadowMapSampler, uvc, 0);
             if (currentDepth > (closestDepth + SHADOW_MAP_BIAS))

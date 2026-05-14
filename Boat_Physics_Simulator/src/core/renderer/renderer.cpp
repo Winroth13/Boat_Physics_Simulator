@@ -40,7 +40,7 @@ constexpr UINT POINT_LIGHT_SHADOW_MAPS_SLOT = 9;
 constexpr UINT SPOT_LIGHT_SHADOW_MAPS_SLOT = 10;
 
 /* Shadow Map Dimentions */
-constexpr unsigned int DIRECTIONAL_SHADOW_MAP_DIMENTIONS = 2048;
+constexpr unsigned int DIRECTIONAL_SHADOW_MAP_DIMENTIONS = 4096;
 constexpr unsigned int POINT_SHADOW_MAP_DIMENTIONS = 512;
 constexpr unsigned int SPOT_SHADOW_MAP_DIMENTIONS = 512;
 
