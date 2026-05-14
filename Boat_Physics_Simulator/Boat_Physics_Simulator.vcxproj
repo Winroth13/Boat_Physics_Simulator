@@ -50,6 +50,7 @@
     <ClInclude Include="include\math\aabb.h" />
     <ClInclude Include="include\math\boatmaths.h" />
     <ClInclude Include="include\math\mathfunctions.h" />
+    <ClInclude Include="include\math\pointcloud.h" />
     <ClInclude Include="include\math\transform.h" />
     <ClInclude Include="include\core\window.h" />
     <ClInclude Include="include\graphics\camera.h" />
@@ -119,6 +120,7 @@
     <ClCompile Include="src\math\aabb.cpp" />
     <ClCompile Include="src\math\boatmaths.cpp" />
     <ClCompile Include="src\math\mathfunctions.cpp" />
+    <ClCompile Include="src\math\pointcloud.cpp" />
     <ClCompile Include="src\math\transform.cpp" />
     <ClCompile Include="src\core\window.cpp" />
     <ClCompile Include="src\graphics\camera.cpp" />

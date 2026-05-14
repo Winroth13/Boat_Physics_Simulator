@@ -13,7 +13,9 @@
 #include "graphics/meshes/quadmesh.h"
 #include "graphics/textures/imagetexture2d.h"
 #include "core/scene.h"
+#include "math/pointcloud.h"
 
+#include <string>
 #include <Windows.h>
 
 using namespace DirectX;
@@ -29,6 +31,18 @@ BoatEntity::~BoatEntity()
 
 void BoatEntity::BeginSelf(RenderServer& renderServer)
 {
+	auto vShader = std::make_shared<VertexShader>("resources/VertexShader.cso");
+	mSphereModel = std::make_unique<OBJModel>("assets/pointclouds/point_sphere.obj", vShader);
+
+	PointCloud boatCloud("assets/pointclouds/point_cloud_boat.obj", 1000);
+	PointCloud airCloud("assets/pointclouds/point_cloud_air.obj", 0.14f, 1.225f);
+	PointCloud engineCloud("assets/pointclouds/point_cloud_engine.obj", 0.14, 7850.f);
+
+	mPointClouds.push_back(boatCloud);
+	mPointClouds.push_back(airCloud);
+	mPointClouds.push_back(engineCloud);
+
+	mCenterOfMass = CalculateCenterOfMass(mPointClouds);
 }
 
 void BoatEntity::UpdateSelf(double deltaTime)
@@ -122,6 +136,24 @@ void BoatEntity::UpdateSelf(double deltaTime)
 
 void BoatEntity::RenderSelf(RenderServer& renderServer)
 {
+	constexpr float radius = 0.14f;
+
+	Transform pTransform;
+	pTransform.SetPosition(mCenterOfMass);
+	pTransform.SetScale(radius, radius, radius);
+
+	renderServer.PushMesh(mSphereModel->GetMesh(0), pTransform.GetMatrix() * transform.GetMatrix());
+	renderServer.PushMaterial(mSphereModel->GetMaterial(0));
+
+	/*for (auto& point : mPointClouds[2].GetPoints())
+	{
+		Transform pTransform;
+		pTransform.SetPosition(point.position);
+		pTransform.SetScale(radius, radius, radius);
+
+		renderServer.PushMesh(mSphereModel->GetMesh(0), pTransform.GetMatrix() * transform.GetMatrix());
+		renderServer.PushMaterial(mSphereModel->GetMaterial(0));
+	}*/
 }
 
 static inline bool IsKeyDown(int vKey)

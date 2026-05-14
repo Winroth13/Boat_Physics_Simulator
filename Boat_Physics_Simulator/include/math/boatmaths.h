@@ -1,4 +1,5 @@
 #pragma once
+#include "math/pointcloud.h"
 
 float CalculateWaterViscosity(float waterTemperature, float waterViscosityFactor);
 
@@ -20,3 +21,5 @@ float CalculateWaterDragForce(
 );
 
 float CalculateMomentOfInertia(float length, float width, float mass);
+
+DirectX::XMFLOAT3 CalculateCenterOfMass(std::vector<PointCloud>& pointClouds);
