@@ -79,7 +79,7 @@ public:
 		auto& motorHingeEntity = mScene->CreateEntity<Entity>();
 		motorHingeEntity.Attach(&boatEntity);
 		motorHingeEntity.SetName("Motor Hinge");
-		motorHingeEntity.transform.SetPosition(0, 0.6f, -3.3);
+		motorHingeEntity.transform.SetPosition(0, 0.6f, -3.3f);
 		boatEntity.SetMotorHingeEntity(&motorHingeEntity);
 
 		auto boatEngineModel = std::make_shared<OBJModel>("assets/motorboat/MotorBoatEngine.obj", vShader);
@@ -92,7 +92,7 @@ public:
 		auto& propellerEntity = mScene->CreateEntity<Entity>();
 		propellerEntity.Attach(&motorHingeEntity);
 		propellerEntity.SetName("Propeller");
-		propellerEntity.transform.SetPosition(0, -1, -0.7);
+		propellerEntity.transform.SetPosition(0.0f, -1.0f, -0.7f);
 		boatEntity.SetPropellerEntity(&propellerEntity);
 
 		/* Ocean */
