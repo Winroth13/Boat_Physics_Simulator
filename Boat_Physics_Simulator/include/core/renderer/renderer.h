@@ -318,17 +318,12 @@ private:
 	std::vector<SpotLightData> mSpotLightsData;
 
 	/* Shadow Mapping */
-	std::unique_ptr<VertexShader> mShadowMapVertexShader;
 	std::unique_ptr<PixelShader> mShadowMapPixelShader;
 	std::unique_ptr<PixelShader> mShadowMapLinearPixelShader;
-
-	std::unique_ptr<HullShader> mShadowTessellationHullShader;
-	std::unique_ptr<DomainShader> mShadowDisplacementDomainShader;
 
 	ShadowMap mDirectionalLightsShadowMap;
 	OmnidirectionalShadowMap mPointLightsShadowMap;
 	ShadowMap mSpotLightsShadowMap;
-	ID3D11InputLayout* mShadowInputLayout = nullptr;
 	ID3D11SamplerState* mShadowMapSampler = nullptr;
 
 	/* Particle System */
