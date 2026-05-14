@@ -209,9 +209,9 @@ void BoatEntity::RenderImguiSelf()
 		ImGui::TreePop();
 
         int zero = 0;
-        static bool matias = false;
-        if (ImGui::Checkbox("Matias", &matias))
-            if (matias)
+        static bool mattias = false;
+        if (ImGui::Checkbox("Mattias", &mattias))
+            if (mattias)
                 float a = 1 / zero;
 	}
 }
