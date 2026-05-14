@@ -52,13 +52,15 @@ struct Material
 cbuffer cbPerFrame : register(b0)
 {
     float3 ambientColor;
-    int numDirectionalLights;
-    int numPointLights;
-    int numSpotLights;
-    int flags;
-    float pad0;
+    uint numDirectionalLights;
+    uint numPointLights;
+    uint numSpotLights;
+    uint flags;
+    uint tickCount;
     uint2 screenDimensions;
-    float2 pad1;
+    float2 pad0;
+    float3 sceneCameraPos;
+    float pad1;
 };
 
 cbuffer cbPerView : register(b1)
@@ -85,7 +87,7 @@ sampler shadowMapSampler : register(s1);
 #define	SHOW_GBUFFERS 2
 #define	USE_BLINN_PHONG 4
 
-#define SHADOW_MAP_BIAS 0.001
+#define SHADOW_MAP_BIAS 0.01
 #define SHADOW_SAMPLES_DIMENTIONS 6
 #define SHADOW_OFFSET_STRENGTH 0.003f
 #define DIRECTIONAL_SHADOW_OFFSET_STRENGTH 0.001f
@@ -98,7 +100,7 @@ sampler shadowMapSampler : register(s1);
 
 float calcOmniShadowFactor(
     float3 fragmentWorldPosition,
-    int index,
+    uint index,
     const TextureCubeArray<float> texArr
 )
 {
@@ -153,7 +155,7 @@ float calcOmniShadowFactor(
 float calcShadowFactor(
     float3 fragmentWorldPosition,
     float4x4 lightViewProjMatrix,
-    int index,
+    uint index,
     const Texture2DArray<float> texArr,
     bool isDirectional = false
 )
@@ -332,7 +334,7 @@ void main( uint3 DTid : SV_DispatchThreadID)
     totalLight = ambientLight;
     
     /* Directional lights */
-    for (int i = 0; i < numDirectionalLights; ++i)
+    for (uint i = 0; i < numDirectionalLights; ++i)
     {
         float shadowFactor = calcShadowFactor(
             worldPosition,

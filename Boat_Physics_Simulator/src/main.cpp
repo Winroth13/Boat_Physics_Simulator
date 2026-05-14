@@ -78,7 +78,7 @@ public:
 		auto& motorHingeEntity = mScene->CreateEntity<Entity>();
 		motorHingeEntity.Attach(&boatEntity);
 		motorHingeEntity.SetName("Motor Hinge");
-		motorHingeEntity.transform.SetPosition(0, 0.6f, -3.3);
+		motorHingeEntity.transform.SetPosition(0, 0.6f, -3.3f);
 
 		boatEntity.SetMotorHingeEntity(&motorHingeEntity);
 
@@ -106,7 +106,7 @@ public:
 		}
 
 		auto& cameraEntity = mScene->CreateEntity<CameraEntity>();
-		cameraEntity.transform.SetPosition(0, 5.8, -8.7);
+		cameraEntity.transform.SetPosition(0, 5.8f, -8.7f);
 		cameraEntity.transform.SetPitch(DirectX::XMConvertToRadians(18));
 		cameraEntity.Attach(&boatEntity);
 	};

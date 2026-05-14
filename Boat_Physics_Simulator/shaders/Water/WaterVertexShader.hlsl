@@ -19,12 +19,26 @@ struct VertexShaderOutput
 };
 
 // Constant buffers
+cbuffer cbPerFrame : register(b0)
+{
+    float3 ambientColor;
+    uint numDirectionalLights;
+    uint numPointLights;
+    uint numSpotLights;
+    uint flags;
+    uint tickCount;
+    uint2 screenDimensions;
+    float2 pad0;
+    float3 sceneCameraPos;
+    float pad1;
+};
+
 cbuffer cbPerView : register(b1)
 {
     float4x4 viewProjMatrix;
     float4x4 viewMatrix;
     float3 cameraPos;
-    float pad1;
+    float pad2;
 }
 
 cbuffer cbPerObject : register(b2)
@@ -44,7 +58,7 @@ VertexShaderOutput main(VertexShaderInput input)
     output.worldPosition = worldPos.xyz;
 
     output.worldNormal = normalize(mul((float3x3) worldInvTransposeMatrix, input.normal));
-    output.uv = worldPos.zx * 0.04f;
+    output.uv = worldPos.zx * 0.04f + tickCount * 0.0001f;
     
     float3 tangent = input.tangent;
     float3 normal = normalize(input.normal);

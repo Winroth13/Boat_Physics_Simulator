@@ -661,6 +661,8 @@ void Renderer::BeginRender()
 
 	mFlags = mNewFlags;
 
+	mTickCount = GetTickCount();
+
 	BindPerFrameBuffer(ShaderType::VERTEX);
 
 	BindPerViewBuffer(ShaderType::VERTEX);
@@ -753,12 +755,13 @@ void Renderer::UpdatePerFrameBuffer(
 {
 	PerFrameBuffer perFrameBuffer = {};
 	perFrameBuffer.ambientColor = ambientColor;
-
 	perFrameBuffer.numDirectionalLights = numDirectionalLights;
 	perFrameBuffer.numPointLights = numPointLights;
 	perFrameBuffer.numSpotLights = numSpotLights;
 	perFrameBuffer.flags = flags;
+	perFrameBuffer.tickCount = mTickCount;
 	perFrameBuffer.screenDimensions = screenDimensions;
+	perFrameBuffer.sceneCameraPos = mSceneCamera.pos;
 
 	mImmediateContext->UpdateSubresource(mPerFrameBuffer, 0, NULL, &perFrameBuffer, 0, 0);
 }
@@ -1578,6 +1581,9 @@ void Renderer::BindPerFrameBuffer(ShaderType shaderType)
 	case ShaderType::PIXEL:
 		mImmediateContext->PSSetConstantBuffers(PER_FRAME, 1, &mPerFrameBuffer);
 		break;
+	case ShaderType::HULL:
+		mImmediateContext->HSSetConstantBuffers(PER_FRAME, 1, &mPerFrameBuffer);
+		break;
 	case ShaderType::COMPUTE:
 		mImmediateContext->CSSetConstantBuffers(PER_FRAME, 1, &mPerFrameBuffer);
 		break;
@@ -1665,6 +1671,7 @@ void Renderer::BindMaterialSRV(std::shared_ptr<Material> material, uint32_t inde
 		mImmediateContext->HSSetConstantBuffers(BUFFER_PER_OBJECT, 1, &mPerObjectBuffer);
 		mImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
 		BindHullShader(mTessellationHullShader);
+		BindPerFrameBuffer(ShaderType::HULL);
 		BindPerMaterialBuffer(ShaderType::HULL);
 		BindPerMaterialBuffer(ShaderType::DOMAIN_SHADER);
 		BindDomainShader(mDisplacementDomainShader);
