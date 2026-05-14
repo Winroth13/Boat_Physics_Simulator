@@ -52,13 +52,15 @@ struct Material
 cbuffer cbPerFrame : register(b0)
 {
     float3 ambientColor;
-    int numDirectionalLights;
-    int numPointLights;
-    int numSpotLights;
-    int flags;
-    float pad0;
+    uint numDirectionalLights;
+    uint numPointLights;
+    uint numSpotLights;
+    uint flags;
+    uint tickCount;
     uint2 screenDimensions;
-    float2 pad1;
+    float2 pad0;
+    float3 sceneCameraPos;
+    float pad1;
 };
 
 cbuffer cbPerView : register(b1)
@@ -98,7 +100,7 @@ sampler shadowMapSampler : register(s1);
 
 float calcOmniShadowFactor(
     float3 fragmentWorldPosition,
-    int index,
+    uint index,
     const TextureCubeArray<float> texArr
 )
 {
@@ -153,7 +155,7 @@ float calcOmniShadowFactor(
 float calcShadowFactor(
     float3 fragmentWorldPosition,
     float4x4 lightViewProjMatrix,
-    int index,
+    uint index,
     const Texture2DArray<float> texArr,
     bool isDirectional = false
 )
@@ -195,9 +197,19 @@ float calcShadowFactor(
         for (int y = -SHADOW_SAMPLES_DIMENTIONS / 2; y <= SHADOW_SAMPLES_DIMENTIONS / 2; y++)
         {
             uint offsetIndex = numSamples % 15;
+            
+            float2 realOffset;
 
-            float2 realOffset = float2(x * (1.0f / width), y * (1.0f / height));
-            realOffset += offsets[offsetIndex] * offsetStrength;
+            if (x != 0 || y != 0)
+            {
+                realOffset = float2(x * (1.0f / width), y * (1.0f / height));
+                realOffset += offsets[offsetIndex] * offsetStrength;
+            }
+            else
+            {
+                realOffset = float2(0.0f, 0.0f);
+            }
+            
             float3 uvc = float3(uv + realOffset, index);
             float closestDepth = texArr.SampleLevel(shadowMapSampler, uvc, 0);
             if (currentDepth > (closestDepth + SHADOW_MAP_BIAS))
@@ -332,7 +344,7 @@ void main( uint3 DTid : SV_DispatchThreadID)
     totalLight = ambientLight;
     
     /* Directional lights */
-    for (int i = 0; i < numDirectionalLights; ++i)
+    for (uint i = 0; i < numDirectionalLights; ++i)
     {
         float shadowFactor = calcShadowFactor(
             worldPosition,

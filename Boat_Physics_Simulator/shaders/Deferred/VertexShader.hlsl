@@ -19,14 +19,6 @@ struct VertexShaderOutput
 };
 
 // Constant buffers
-/*cbuffer cbPerFrame : register(b0)
-{
-    float3 sunDirection;
-    float3 sunColor;
-    float3 ambientColor;
-    float3 pad0;
-}*/
-
 cbuffer cbPerView : register(b1)
 {
     float4x4 viewProjMatrix;

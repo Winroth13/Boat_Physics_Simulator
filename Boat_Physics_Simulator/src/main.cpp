@@ -18,6 +18,7 @@
 #include "core/entities/cameraentity.h"
 #include "core/entities/enviromententity.h"
 #include "core/entities/directionallightentity.h"
+#include "core/entities/spotlightentity.h"
 
 #include "core/entities/boatentity.h"
 
@@ -103,15 +104,16 @@ public:
 			oceanMaterial->SetMaxTessFactor(40.0f);
 			oceanMaterial->SetMinTessDistance(101.0f);
 			oceanMaterial->SetMaxTessDistance(100.0f);
-			oceanMaterial->SetDispStrength(0.5f);
+			oceanMaterial->SetDispStrength(0.3f);
 
 			auto& oceanEntity = mScene->CreateEntity<ModelEntity>(oceanModel);
 			oceanEntity.transform.SetScale(100.0f, 1.0f, 100.0f);
+			oceanEntity.SetName("Ocean");
 			ocean = &oceanEntity;
 		}
 
 		auto& cameraEntity = mScene->CreateEntity<CameraEntity>();
-		cameraEntity.transform.SetPosition(0, 5.8, -8.7);
+		cameraEntity.transform.SetPosition(0, 5.8f, -8.7f);
 		cameraEntity.transform.SetPitch(DirectX::XMConvertToRadians(18));
 		cameraEntity.Attach(&boatEntity);
 	};

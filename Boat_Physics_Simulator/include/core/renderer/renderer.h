@@ -58,9 +58,11 @@ struct PerFrameBuffer
 	uint32_t numPointLights;
 	uint32_t numSpotLights;
 	uint32_t flags;
-	float pad0;
+	uint32_t tickCount;
 	std::array<uint32_t, 2> screenDimensions;
-	DirectX::XMFLOAT2 pad1;
+	DirectX::XMFLOAT2 pad0;
+	DirectX::XMFLOAT3 sceneCameraPos;
+	float pad1;
 };
 
 struct PerViewBuffer
@@ -384,4 +386,6 @@ private:
 
 	uint16_t mFlags = 0;
 	uint16_t mNewFlags = 0;
+
+	uint32_t mTickCount = GetTickCount();
 };
