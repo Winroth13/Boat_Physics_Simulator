@@ -132,7 +132,7 @@ void BoatEntity::UpdateSelf(double deltaTime)
     ratio = ratio < 0.0f ? 0.0f : ratio > 1.0f ? 1.0f : ratio;
 	mWaterDragForce = CalculateWaterDragForce(
 		WATER_DENSITY,
-		(GetBoatWidth() * GetBoatHeight()) * ratio,
+		(GetBoatWidth() * GetBoatHeight() / 2.0f) * ratio,
 		mCh,
         velocityScalar
 	);
@@ -141,9 +141,34 @@ void BoatEntity::UpdateSelf(double deltaTime)
     acceleration = accelerationForwardScalar * transform.GetForwardDir(); // Forward Thrust Force
     acceleration -= XMVectorSet(0, GRAVITY, 0, 0);
 
-	float volumeUnderWater = GetBoatWidth() * GetBoatLength() * GetBoatHeight() * ratio;
+	/* Calculate Boat Volumes */
+	{
+		PointCloud above;
+		PointCloud below;
 
-    acceleration += WATER_DENSITY * volumeUnderWater / mMass * XMVectorSet(0, GRAVITY, 0, 0);
+		SplitPointCloud(GetPointCloud(PointCloudType::BOAT), transform.GetMatrix(), 0.0f, above, below);
+		mVolumeUnderWater = below.GetVolume();
+    }
+
+	/* Calculate Air Volumes */
+	{
+		PointCloud above;
+		PointCloud below;
+
+		SplitPointCloud(GetPointCloud(PointCloudType::AIR), transform.GetMatrix(), 0.0f, above, below);
+		mVolumeUnderWater += below.GetVolume();
+	}
+
+	/* Calculate Engine Volumes */
+	{
+		PointCloud above;
+		PointCloud below;
+
+		SplitPointCloud(GetPointCloud(PointCloudType::ENGINE), transform.GetMatrix(), 0.0f, above, below);
+		mVolumeUnderWater += below.GetVolume();
+	}
+
+    acceleration += WATER_DENSITY * mVolumeUnderWater / mMass * XMVectorSet(0, GRAVITY, 0, 0);
 
     velocity += acceleration * delta;
 
@@ -166,12 +191,7 @@ void BoatEntity::RenderSelf(RenderServer& renderServer)
 	renderServer.PushMesh(mSphereModel->GetMesh(0), pTransform.GetMatrix() * transform.GetMatrix());
 	renderServer.PushMaterial(mSphereModel->GetMaterial(0));
 
-	PointCloud above;
-	PointCloud below;
-
-	SplitPointCloud(GetPointCloud(PointCloudType::BOAT), transform.GetMatrix(), 0.0f, above, below);
-
-	for (auto& point : above.GetPoints())
+	/*for (auto& point : above.GetPoints())
 	{
 		Transform pTransform;
 		pTransform.SetPosition(point.position);
@@ -179,7 +199,7 @@ void BoatEntity::RenderSelf(RenderServer& renderServer)
 
 		renderServer.PushMesh(mSphereModel->GetMesh(0), pTransform.GetMatrix() * transform.GetMatrix());
 		renderServer.PushMaterial(mSphereModel->GetMaterial(0));
-	}
+	}*/
 }
 
 static inline bool IsKeyDown(int vKey)
@@ -251,6 +271,17 @@ void BoatEntity::RenderImguiSelf()
 		ImGui::Text("Boat Length: %.2f m", GetBoatLength());
 
 		ImGui::Text("Boat Mass: %.2f kg", mMass);
+
+		float totalVolume = 0;
+		totalVolume += GetPointCloud(PointCloudType::BOAT).GetVolume();
+		totalVolume += GetPointCloud(PointCloudType::AIR).GetVolume();
+		totalVolume += GetPointCloud(PointCloudType::ENGINE).GetVolume();
+		ImGui::Text("Volume: %.2f m^3", totalVolume);
+
+		float percentBelowWater = (mVolumeUnderWater / totalVolume) * 100;
+
+		ImGui::Text("Volume Below Water: %.1f %%", percentBelowWater);
+		ImGui::Text("Volume Above Water: %.1f %%", 100 - percentBelowWater);
 
 		ImGui::DragFloat("Wake Factor", &mWakeFactor, 0.001f, 0, 0.99f);
 		// TODO: Other constants

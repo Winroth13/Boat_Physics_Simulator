@@ -100,4 +100,6 @@ private:
     float mCh = 0.0f;
 
     bool mPause = false;
+
+    float mVolumeUnderWater = 0.0f;
 };
