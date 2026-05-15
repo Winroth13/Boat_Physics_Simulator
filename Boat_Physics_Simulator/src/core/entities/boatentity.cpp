@@ -31,15 +31,21 @@ BoatEntity::~BoatEntity()
 
 void BoatEntity::BeginSelf(RenderServer& renderServer)
 {
+	if (!mAreaCalculator.Create())
+	{
+		Logger::Error("Failed to create area calculator");
+		throw std::runtime_error("");
+    }
+
 	auto vShader = std::make_shared<VertexShader>("resources/VertexShader.cso");
 	mSphereModel = std::make_unique<OBJModel>("assets/pointclouds/point_sphere.obj", vShader);
 
-	PointCloud boatCloud("assets/pointclouds/new/point_cloud_boat.obj", 1000);
-	PointCloud airCloud("assets/pointclouds/new/point_cloud_air.obj", 0.14f, 1.225f);
-	PointCloud engineCloud("assets/pointclouds/new/point_cloud_engine.obj", 200);
+	PointCloud boatCloud("assets/pointclouds/new/point_cloud_boat.obj", 500);
+	PointCloud airCloud("assets/pointclouds/new/point_cloud_air.obj", 0.125f, 1.225f);
+	PointCloud engineCloud("assets/pointclouds/new/point_cloud_engine.obj", 100);
 
 	boatCloud.SetPointRadius(0.025f);
-	engineCloud.SetPointRadius(0.14f);
+	engineCloud.SetPointRadius(0.025f);
 
 	mPointClouds.resize((int)PointCloudType::COUNT);
 
@@ -70,6 +76,13 @@ void BoatEntity::UpdateSelf(double deltaTime)
     XMVECTOR acceleration = XMLoadFloat3(&mAcceleration);
 
     float velocityScalar = XMVectorGetX(XMVector3Length(velocity));
+
+	/* Calculate Area */
+	mAreaCalculator.CalculateArea(
+		mBoatModelEntity->GetModel(), 
+		transform.GetMatrix(), 
+		{0, DirectX::XM_PI, 0}
+	);
 
 	/* Calculate Forward Thrust Force */
 	{
@@ -182,7 +195,7 @@ void BoatEntity::UpdateSelf(double deltaTime)
 
 void BoatEntity::RenderSelf(RenderServer& renderServer)
 {
-	constexpr float radius = 0.05f;
+	constexpr float radius = 0.025f;
 
 	Transform pTransform;
 	pTransform.SetPosition(mCenterOfMass);

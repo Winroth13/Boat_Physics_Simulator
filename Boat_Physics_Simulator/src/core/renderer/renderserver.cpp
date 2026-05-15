@@ -158,6 +158,11 @@ void RenderServer::UpdatePerObject(DirectX::XMMATRIX world)
 	mRenderer->UpdatePerObjectBuffer(world);
 }
 
+void RenderServer::UpdatePerViewBuffer(CameraData* data)
+{
+	mRenderer->UpdatePerViewBuffer(*data);
+}
+
 void RenderServer::SetWireframe(bool value)
 {
 	if (value)

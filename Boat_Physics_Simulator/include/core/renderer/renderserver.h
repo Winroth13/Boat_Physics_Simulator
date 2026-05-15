@@ -14,6 +14,8 @@ class Camera;
 class ParticleSystem;
 class Texture2D;
 
+
+struct CameraData;
 struct ID3D11DeviceContext;
 struct AABB;
 
@@ -64,6 +66,8 @@ public:
 	void UpdateFrustum(DirectX::BoundingFrustum frustum);
 	void UpdateEnviroment(Enviroment& enviroment);
 	void UpdatePerObject(DirectX::XMMATRIX world);
+
+	void UpdatePerViewBuffer(CameraData* data);
 
 	void SetWireframe(bool value);
 	void SetShowGBuffer(bool value);

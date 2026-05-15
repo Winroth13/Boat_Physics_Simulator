@@ -53,7 +53,7 @@ public:
 
         auto& gameEntity = mScene->CreateEntity<Entity>();
         gameEntity.SetName("Game");
-        gameEntity.SetVisible(false);
+        gameEntity.SetVisible(true); // <-- SET FALSE FOR TITLE SCREEN
 
         auto mattiasModel = std::make_shared<OBJModel>("assets/mattias/mattias.obj", vShader, false);
 
@@ -85,6 +85,7 @@ public:
 		boatModelEntity.SetName("Boat Model");
 		boatModelEntity.transform.SetPosition(0, 0, 0);
 		boatModelEntity.transform.SetScale(1, 1, 1);
+		boatEntity.SetBoatModelEntity(&boatModelEntity);
 
 		auto cubeModel = std::make_shared<OBJModel>("assets/cube/cube.obj", vShader);
 		auto& cubeEntity = mScene->CreateEntity<ModelEntity>(cubeModel);

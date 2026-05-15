@@ -5,6 +5,8 @@
 
 #include "graphics/models/objmodel.h"
 
+#include "boat/areacalculator.h"
+
 #include <memory>
 #include <DirectXMath.h>
 
@@ -16,6 +18,7 @@ public:
 
     void SetMotorHingeEntity(Entity* e) { mMotorHingeEntity = e; }
     void SetPropellerEntity(Entity* e) { mPropellerEntity = e; }
+    void SetBoatModelEntity(ModelEntity* e) { mBoatModelEntity = e; }
     void SetGameEntity(Entity* e) { mGameEntity = e; }
 
 protected:
@@ -59,8 +62,11 @@ private:
 
     std::vector<PointCloud> mPointClouds;
 
+    AreaCalculator mAreaCalculator;
+
     Entity* mMotorHingeEntity = nullptr;
     Entity* mPropellerEntity = nullptr;
+    ModelEntity* mBoatModelEntity = nullptr;
     Entity* mGameEntity = nullptr;
 
     float mUpdateTimer = 0.0f;
@@ -101,7 +107,7 @@ private:
     float mReynoldsNumber = 0.0f;
     float mCh = 0.0f;
 
-    bool mPause = true;
+    bool mPause = false; // <-- SET TRUE FOR START SCREEN :)
 
     float mVolumeUnderWater = 0.0f;
 };

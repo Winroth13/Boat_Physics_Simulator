@@ -55,6 +55,7 @@ constexpr UINT GBUFFER_START_SLOT = 11;
 constexpr UINT DEFAULT_SAMPLER_SLOT = 0;
 constexpr UINT SHADOW_MAP_SAMPLER_SLOT = 1;
 
+
 Renderer::Renderer() :
 	mSwapChain(nullptr),
 	mBackBufferRenderTargetView(nullptr),
@@ -68,6 +69,7 @@ Renderer::Renderer() :
 
 ID3D11Device* Renderer::sDevice = nullptr;
 ID3D11DeviceContext* Renderer::mImmediateContext = nullptr;
+RenderServer Renderer::mRenderServer;
 
 Renderer::~Renderer()
 {

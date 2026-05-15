@@ -193,7 +193,9 @@ public:
 
 	static ID3D11Device* GetDevice() { return Renderer::sDevice; }
 	static ID3D11DeviceContext* GetContext() { return Renderer::mImmediateContext; }
-	RenderServer& GetRenderServer() { return mRenderServer; }
+
+	RenderServer& GetRenderServer() { return Renderer::mRenderServer; }
+	static RenderServer& GetRenderServerStatic() { return Renderer::mRenderServer; }
 
 	void UpdatePerFrameBuffer(
 		const DirectX::XMFLOAT3 ambientColor,
@@ -228,6 +230,7 @@ public:
 	void BakeStaticGeometry();
 
 	void UpdatePerObjectBuffer(const DirectX::XMMATRIX world);
+	void UpdatePerViewBuffer(const CameraData& cameraData);
 
 private:
 	void RenderShadowMaps();
@@ -246,7 +249,6 @@ private:
 		std::vector<PerMaterial>& perMaterials
 	);
 
-	void UpdatePerViewBuffer(const CameraData& cameraData);
 	void UpdatePerMaterialBuffer(std::shared_ptr<Material> material);
 
 	/* Bind Functions*/
@@ -357,7 +359,7 @@ private:
 	ID3D11RenderTargetView* mBackBufferRenderTargetView;
 	ID3D11UnorderedAccessView* mBackBufferUAV;
 
-	RenderServer mRenderServer;
+	static RenderServer mRenderServer;
 
 	ID3D11SamplerState* mDefaultSampler;
 
