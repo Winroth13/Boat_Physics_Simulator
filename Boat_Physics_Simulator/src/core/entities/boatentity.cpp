@@ -304,4 +304,9 @@ void BoatEntity::RenderImguiSelf()
 		ImGui::DragFloat("Angular Velocity", &mAngularVelocity, 0.01f, 0, FLT_MAX, "%.1f rad/s");
 		ImGui::TreePop();
 	}
+
+    if (ImGui::Button("Start Game")) {
+        mPause = false;
+        mGameEntity->SetVisible(true);
+    }
 }

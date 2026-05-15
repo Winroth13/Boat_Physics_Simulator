@@ -51,6 +51,17 @@ public:
 	{
 		auto vShader = std::make_shared<VertexShader>("resources/VertexShader.cso");
 
+        auto& gameEntity = mScene->CreateEntity<Entity>();
+        gameEntity.SetName("Game");
+        gameEntity.SetVisible(false);
+
+        auto mattiasModel = std::make_shared<OBJModel>("assets/mattias/mattias.obj", vShader, false);
+
+        auto& mattiasModelEntity = mScene->CreateEntity<ModelEntity>(mattiasModel);
+        mattiasModelEntity.SetName("Mattias Model");
+        mattiasModelEntity.transform.SetPosition(0, 2.35f, -3.50f);
+        mattiasModelEntity.transform.SetPitch(DirectX::XMConvertToRadians(-72));
+
 		auto& enviromentEntity = mScene->CreateEntity<EnviromentEntity>();
 		int ambientDivisor = 1;
 		enviromentEntity.SetAmbientColor(108.f / (255 * ambientDivisor), 150.f / (255 * ambientDivisor), 177.f / (255 * ambientDivisor));
@@ -64,6 +75,8 @@ public:
 		boatEntity.transform.SetPosition(0, 0.050f, 0);
 		inspectorEntity = &boatEntity;
 		boat = &boatEntity;
+        boatEntity.Attach(&gameEntity);
+        boatEntity.SetGameEntity(&gameEntity);
 
 		auto boatModel = std::make_shared<OBJModel>("assets/new_motorboat/motorboat.obj", vShader, true);
 
@@ -119,6 +132,7 @@ public:
 			oceanEntity.transform.SetScale(100.0f, 1.0f, 100.0f);
 			oceanEntity.SetName("Ocean");
 			ocean = &oceanEntity;
+            oceanEntity.Attach(&gameEntity);
 		}
 
 		auto& cameraEntity = mScene->CreateEntity<CameraEntity>();
