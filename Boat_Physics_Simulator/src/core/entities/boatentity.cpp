@@ -56,7 +56,7 @@ void BoatEntity::UpdateSelf(double deltaTime)
 	if (mPause)
 		return;
 
-	mUpdateTimer += deltaTime;
+	mUpdateTimer += static_cast<float>(deltaTime);
 
 	if (mUpdateTimer < UPDATE_RATE)
 		return;
@@ -303,11 +303,5 @@ void BoatEntity::RenderImguiSelf()
 
 		ImGui::DragFloat("Angular Velocity", &mAngularVelocity, 0.01f, 0, FLT_MAX, "%.1f rad/s");
 		ImGui::TreePop();
-
-        int zero = 0;
-        static bool mattias = false;
-        if (ImGui::Checkbox("Mattias", &mattias))
-            if (mattias)
-                float a = 1 / zero;
 	}
 }
