@@ -26,7 +26,7 @@ cbuffer cbPerFrame : register(b0)
     uint numPointLights;
     uint numSpotLights;
     uint flags;
-    uint tickCount;
+    float elapsedTime;
     uint2 screenDimensions;
     float2 pad0;
     float3 sceneCameraPos;
@@ -58,7 +58,7 @@ VertexShaderOutput main(VertexShaderInput input)
     output.worldPosition = worldPos.xyz;
 
     output.worldNormal = normalize(mul((float3x3) worldInvTransposeMatrix, input.normal));
-    output.uv = worldPos.zx * 0.04f + tickCount * 0.0001f;
+    output.uv = worldPos.zx * 0.04f + elapsedTime * 0.1f;
     
     float3 tangent = input.tangent;
     float3 normal = normalize(input.normal);

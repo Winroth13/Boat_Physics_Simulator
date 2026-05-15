@@ -31,7 +31,7 @@ cbuffer cbPerFrame : register(b0)
     uint numPointLights;
     uint numSpotLights;
     uint flags;
-    uint tickCount;
+    float elapsedTime;
     uint2 screenDimensions;
     float2 pad0;
     float3 sceneCameraPos;

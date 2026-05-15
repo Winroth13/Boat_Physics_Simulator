@@ -2,6 +2,7 @@
 #include "core/logger.h"
 
 uint32_t Engine::mTicks = 0;
+double Engine::mElapsedTime = 0;
 
 void Engine::Run(App* app, const std::string& title, const int width, const int height)
 {
@@ -68,6 +69,7 @@ void Engine::Update(double delta)
 	mApp->Update(delta);
 
 	mTicks++;
+	mElapsedTime += delta;
 }
 
 void Engine::Render()
@@ -107,4 +109,9 @@ const double Engine::GetDelta()
 const uint32_t Engine::GetTicks()
 {
 	return mTicks;
+}
+
+const double Engine::GetElapsedTime()
+{
+	return mElapsedTime;
 }
