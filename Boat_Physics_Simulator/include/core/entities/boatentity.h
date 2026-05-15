@@ -16,6 +16,7 @@ public:
 
     void SetMotorHingeEntity(Entity* e) { mMotorHingeEntity = e; }
     void SetPropellerEntity(Entity* e) { mPropellerEntity = e; }
+    void SetGameEntity(Entity* e) { mGameEntity = e; }
 
 protected:
     virtual void BeginSelf(RenderServer& renderServer) override;
@@ -60,6 +61,7 @@ private:
 
     Entity* mMotorHingeEntity = nullptr;
     Entity* mPropellerEntity = nullptr;
+    Entity* mGameEntity = nullptr;
 
     float mUpdateTimer = 0.0f;
 
@@ -99,7 +101,7 @@ private:
     float mReynoldsNumber = 0.0f;
     float mCh = 0.0f;
 
-    bool mPause = false;
+    bool mPause = true;
 
     float mVolumeUnderWater = 0.0f;
 };
