@@ -8,6 +8,7 @@
 #include "graphics/textures/cubemaptexture.h"
 #include "graphics/camera.h"
 #include "math/mathfunctions.h"
+#include "core/engine.h"
 
 constexpr unsigned int MAX_DIRECTIONAL_LIGHTS = 8;
 constexpr unsigned int MAX_POINT_LIGHTS = 8;
@@ -661,7 +662,7 @@ void Renderer::BeginRender()
 
 	mFlags = mNewFlags;
 
-	mTickCount = GetTickCount();
+	mElapsedTime = static_cast<float>(Engine::GetElapsedTime());
 
 	BindPerFrameBuffer(ShaderType::VERTEX);
 
@@ -759,7 +760,7 @@ void Renderer::UpdatePerFrameBuffer(
 	perFrameBuffer.numPointLights = numPointLights;
 	perFrameBuffer.numSpotLights = numSpotLights;
 	perFrameBuffer.flags = flags;
-	perFrameBuffer.tickCount = mTickCount;
+	perFrameBuffer.elapsedTime = mElapsedTime;
 	perFrameBuffer.screenDimensions = screenDimensions;
 	perFrameBuffer.sceneCameraPos = mSceneCamera.pos;
 

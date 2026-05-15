@@ -13,6 +13,7 @@ public:
 	void Shutdown();
 
 	static const uint32_t GetTicks();
+	static const double GetElapsedTime();
 
 private:
 	bool Initialize(const std::string& title, const int width, const int height);
@@ -30,4 +31,5 @@ private:
 
 	std::chrono::steady_clock::time_point mLastTime;
 	static uint32_t mTicks;
+	static double mElapsedTime;
 };
