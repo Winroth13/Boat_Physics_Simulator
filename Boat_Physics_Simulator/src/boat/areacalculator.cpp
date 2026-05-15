@@ -157,7 +157,7 @@ bool AreaCalculator::Create()
 
 		if (FAILED(Renderer::GetDevice()->CreateUnorderedAccessView(mAreaBuffer, &uavDesc, &mAreaBufferUAV)))
 		{
-			Logger::Error("Failed to create area unordered acces view");
+			Logger::Error("Failed to create area unordered access view");
 			return false;
 		}
 	}
@@ -198,11 +198,9 @@ float AreaCalculator::CalculateArea(std::shared_ptr<Model> model, Transform tran
 		camera.transform.SetAngles(angles);
 		camera.SetOrthographicLens(WORLD_CAMERA_WIDTH, WORLD_CAMERA_HEIGHT, 0.1f, 10.0f);
 
-		DirectX::XMFLOAT3 forwardDirf = camera.transform.GetForwardDir3f();
-		DirectX::XMVECTOR lookDirV = DirectX::XMLoadFloat3(&forwardDirf);
-		lookDirV = DirectX::XMVectorScale(lookDirV, -5);
-		lookDirV = DirectX::XMVector3Transform(lookDirV, transform.GetMatrix());
-		camera.transform.SetPosition(lookDirV);
+        DirectX::XMVECTOR offset = DirectX::XMVectorScale(camera.transform.GetForwardDir(), -5);
+        DirectX::XMVECTOR position = DirectX::XMVectorAdd(offset, transform.GetPosition());
+		camera.transform.SetPosition(position);
 
 		camera.UpdateViewMatrix();
 
