@@ -4,6 +4,8 @@
 #include "graphics/shaders/pixelshader.h"
 #include "graphics/shaders/computeshader.h"
 
+#include "math/transform.h"
+
 #include <d3d11.h>
 
 class AreaCalculator
@@ -16,7 +18,7 @@ public:
 
 	float CalculateArea(
 		std::shared_ptr<Model> model, 
-		DirectX::XMMATRIX transform,
+		Transform transform,
 		DirectX::XMFLOAT3 angles
 	);
 

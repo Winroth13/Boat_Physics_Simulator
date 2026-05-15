@@ -110,4 +110,7 @@ private:
     bool mPause = false; // <-- SET TRUE FOR START SCREEN :)
 
     float mVolumeUnderWater = 0.0f;
+
+    float mFrontAreaUnderWater = 0.0f;
+    float mBottomAreaUnderWater = 0.0f;
 };

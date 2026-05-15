@@ -182,12 +182,18 @@ bool AreaCalculator::Create()
 	return true;
 }
 
-float AreaCalculator::CalculateArea(std::shared_ptr<Model> model, DirectX::XMMATRIX transform, DirectX::XMFLOAT3 angles)
+float AreaCalculator::CalculateArea(std::shared_ptr<Model> model, Transform transform, DirectX::XMFLOAT3 angles)
 {
 	auto ctx = Renderer::GetContext();
 
 	/* Render Mesh under Water */
 	{
+		DirectX::XMFLOAT3 transformAngles = transform.GetAngles3f();
+
+		angles.x += transformAngles.x;
+		angles.y += transformAngles.y;
+		angles.z += transformAngles.z;
+
 		Camera camera;
 		camera.transform.SetAngles(angles);
 		camera.SetOrthographicLens(WORLD_CAMERA_WIDTH, WORLD_CAMERA_HEIGHT, 0.1f, 10.0f);
@@ -195,7 +201,7 @@ float AreaCalculator::CalculateArea(std::shared_ptr<Model> model, DirectX::XMMAT
 		DirectX::XMFLOAT3 forwardDirf = camera.transform.GetForwardDir3f();
 		DirectX::XMVECTOR lookDirV = DirectX::XMLoadFloat3(&forwardDirf);
 		lookDirV = DirectX::XMVectorScale(lookDirV, -5);
-		lookDirV = DirectX::XMVector3Transform(lookDirV, transform);
+		lookDirV = DirectX::XMVector3Transform(lookDirV, transform.GetMatrix());
 		camera.transform.SetPosition(lookDirV);
 
 		camera.UpdateViewMatrix();
@@ -212,7 +218,7 @@ float AreaCalculator::CalculateArea(std::shared_ptr<Model> model, DirectX::XMMAT
 		cameraData.viewProj = camera.GetViewProj();
 		renderServer.UpdatePerViewBuffer(&cameraData);
 
-		renderServer.UpdatePerObject(transform);
+		renderServer.UpdatePerObject(transform.GetMatrix());
 
 		ctx->OMSetRenderTargets(1, &mTextureRTV, nullptr);
 		ctx->RSSetViewports(1, &mViewport);
@@ -259,6 +265,9 @@ float AreaCalculator::CalculateArea(std::shared_ptr<Model> model, DirectX::XMMAT
 		ctx->Dispatch(groupsX, groupsY, 1);
 
 		ctx->CSSetShader(nullptr, nullptr, 0);
+
+		ID3D11ShaderResourceView* views = { nullptr };
+		ctx->CSSetShaderResources(0, 1, &views);
 	}
 
 	ctx->CopyResource(mAreaStagingBuffer, mAreaBuffer);

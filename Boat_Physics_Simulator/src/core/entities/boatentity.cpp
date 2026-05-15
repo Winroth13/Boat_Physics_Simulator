@@ -78,10 +78,16 @@ void BoatEntity::UpdateSelf(double deltaTime)
     float velocityScalar = XMVectorGetX(XMVector3Length(velocity));
 
 	/* Calculate Area */
-	mAreaCalculator.CalculateArea(
+	mFrontAreaUnderWater = mAreaCalculator.CalculateArea(
 		mBoatModelEntity->GetModel(), 
-		transform.GetMatrix(), 
+		transform, 
 		{0, DirectX::XM_PI, 0}
+	);
+
+	mBottomAreaUnderWater = mAreaCalculator.CalculateArea(
+		mBoatModelEntity->GetModel(),
+		transform,
+		{ -DirectX::XM_PIDIV2, 0, 0 }
 	);
 
 	/* Calculate Forward Thrust Force */
@@ -141,11 +147,9 @@ void BoatEntity::UpdateSelf(double deltaTime)
 	float cr = 0.0f; // We don't care about dynamic waves
 	mCh = cf + cr;
 
-	float ratio = (GetBoatHeight() / 2.0f - transform.GetPosition3f().y) / GetBoatHeight();
-    ratio = ratio < 0.0f ? 0.0f : ratio > 1.0f ? 1.0f : ratio;
 	mWaterDragForce = CalculateWaterDragForce(
 		WATER_DENSITY,
-		(GetBoatWidth() * GetBoatHeight() / 2.0f) * ratio,
+		mFrontAreaUnderWater,
 		mCh,
         velocityScalar
 	);
@@ -185,8 +189,8 @@ void BoatEntity::UpdateSelf(double deltaTime)
 
     velocity += acceleration * delta;
 
-    XMStoreFloat3(&mVelocity, velocity);
-    XMStoreFloat3(&mAcceleration, acceleration);
+    DirectX::XMStoreFloat3(&mVelocity, velocity);
+    DirectX::XMStoreFloat3(&mAcceleration, acceleration);
 
     transform.MoveX(mVelocity.x * delta);
 	transform.MoveY(mVelocity.y * delta);
@@ -300,6 +304,9 @@ void BoatEntity::RenderImguiSelf()
 
 		ImGui::Text("Volume Below Water: %.1f %%", percentBelowWater);
 		ImGui::Text("Volume Above Water: %.1f %%", 100 - percentBelowWater);
+
+		ImGui::Text("Front Area Below Water: %.3f m^2", mFrontAreaUnderWater);
+		ImGui::Text("Bottom Area Below Water: %.3f m^2", mBottomAreaUnderWater);
 
 		ImGui::DragFloat("Wake Factor", &mWakeFactor, 0.001f, 0, 0.99f);
 		// TODO: Other constants
