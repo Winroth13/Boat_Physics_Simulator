@@ -241,6 +241,11 @@ void BoatEntity::Input(float delta) {
 
 void BoatEntity::RenderImguiSelf()
 {
+    if (ImGui::Button("Start Game")) {
+        mPause = false;
+        mGameEntity->SetVisible(true);
+    }
+
 	ImGui::Checkbox("Pause", &mPause);
 
 	ImGui::TextColored(ImVec4(0, 1, 0, 1), "Reynolds: %.2f", mReynoldsNumber);
@@ -304,9 +309,4 @@ void BoatEntity::RenderImguiSelf()
 		ImGui::DragFloat("Angular Velocity", &mAngularVelocity, 0.01f, 0, FLT_MAX, "%.1f rad/s");
 		ImGui::TreePop();
 	}
-
-    if (ImGui::Button("Start Game")) {
-        mPause = false;
-        mGameEntity->SetVisible(true);
-    }
 }
