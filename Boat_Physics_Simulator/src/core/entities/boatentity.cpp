@@ -34,7 +34,7 @@ void BoatEntity::BeginSelf(RenderServer& renderServer)
 	auto vShader = std::make_shared<VertexShader>("resources/VertexShader.cso");
 	mSphereModel = std::make_unique<OBJModel>("assets/pointclouds/point_sphere.obj", vShader);
 
-	PointCloud boatCloud("assets/pointclouds/point_cloud_boat.obj", 1000);
+	PointCloud boatCloud("assets/pointclouds/new/point_cloud_boat.obj", 1000);
 	PointCloud airCloud("assets/pointclouds/point_cloud_air.obj", 0.14f, 1.225f);
 	PointCloud engineCloud("assets/pointclouds/point_cloud_engine.obj", 200);
 
@@ -191,7 +191,7 @@ void BoatEntity::RenderSelf(RenderServer& renderServer)
 	renderServer.PushMesh(mSphereModel->GetMesh(0), pTransform.GetMatrix() * transform.GetMatrix());
 	renderServer.PushMaterial(mSphereModel->GetMaterial(0));
 
-	/*for (auto& point : above.GetPoints())
+	/*for (auto& point : GetPointCloud(PointCloudType::BOAT).GetPoints())
 	{
 		Transform pTransform;
 		pTransform.SetPosition(point.position);

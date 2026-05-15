@@ -1,0 +1,13 @@
+# Blender 5.1.1 MTL File: 'motorboat_new.blend'
+# www.blender.org
+
+newmtl Default
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Ks 1.000000 1.000000 1.000000
+Kd 1.000000 1.000000 1.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd Boat_BaseColor.png
+#norm Boat_Normal.png

@@ -65,7 +65,7 @@ public:
 		inspectorEntity = &boatEntity;
 		boat = &boatEntity;
 
-		auto boatModel = std::make_shared<OBJModel>("assets/motorboat/MotorBoat.obj", vShader);
+		auto boatModel = std::make_shared<OBJModel>("assets/new_motorboat/motorboat.obj", vShader, true);
 
 		auto& boatModelEntity = mScene->CreateEntity<ModelEntity>(boatModel);
 		boatModelEntity.Attach(&boatEntity);
@@ -74,15 +74,24 @@ public:
 		boatModelEntity.transform.SetScale(1, 1, 1);
 
 		auto cubeModel = std::make_shared<OBJModel>("assets/cube/cube.obj", vShader);
-		mScene->CreateEntity<ModelEntity>(cubeModel).Attach(&boatEntity);
+		auto& cubeEntity = mScene->CreateEntity<ModelEntity>(cubeModel);
+		cubeEntity.Attach(&boatEntity);
+		cubeEntity.transform.SetPosition(-0.375, 0.3, 0.361);
+		cubeEntity.transform.SetAngles(
+			DirectX::XMConvertToRadians(131.0f),
+			DirectX::XMConvertToRadians(1.0f),
+			DirectX::XMConvertToRadians(0)
+		);
+		cubeEntity.transform.SetScale(0.2f, 0.2f, 0.2f);
+		
 
 		auto& motorHingeEntity = mScene->CreateEntity<Entity>();
 		motorHingeEntity.Attach(&boatEntity);
 		motorHingeEntity.SetName("Motor Hinge");
-		motorHingeEntity.transform.SetPosition(0, 0.6f, -3.3f);
+		motorHingeEntity.transform.SetPosition(0.0f, 0.1f, -1.9f);
 		boatEntity.SetMotorHingeEntity(&motorHingeEntity);
 
-		auto boatEngineModel = std::make_shared<OBJModel>("assets/motorboat/MotorBoatEngine.obj", vShader);
+		auto boatEngineModel = std::make_shared<OBJModel>("assets/new_motorboat/engine.obj", vShader, true);
 		auto& motorModelEntity = mScene->CreateEntity<ModelEntity>(boatEngineModel);
 		motorModelEntity.Attach(&motorHingeEntity);
 		motorModelEntity.SetName("Motor Model");
@@ -113,7 +122,7 @@ public:
 		}
 
 		auto& cameraEntity = mScene->CreateEntity<CameraEntity>();
-		cameraEntity.transform.SetPosition(0, 5.8f, -8.7f);
+		cameraEntity.transform.SetPosition(0, 2.5f, -4.0f);
 		cameraEntity.transform.SetPitch(DirectX::XMConvertToRadians(18));
 		cameraEntity.Attach(&boatEntity);
 	};
