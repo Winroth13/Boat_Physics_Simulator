@@ -84,7 +84,6 @@ public:
 		);
 		cubeEntity.transform.SetScale(0.2f, 0.2f, 0.2f);
 		
-
 		auto& motorHingeEntity = mScene->CreateEntity<Entity>();
 		motorHingeEntity.Attach(&boatEntity);
 		motorHingeEntity.SetName("Motor Hinge");

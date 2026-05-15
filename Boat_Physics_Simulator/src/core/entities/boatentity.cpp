@@ -35,10 +35,10 @@ void BoatEntity::BeginSelf(RenderServer& renderServer)
 	mSphereModel = std::make_unique<OBJModel>("assets/pointclouds/point_sphere.obj", vShader);
 
 	PointCloud boatCloud("assets/pointclouds/new/point_cloud_boat.obj", 1000);
-	PointCloud airCloud("assets/pointclouds/point_cloud_air.obj", 0.14f, 1.225f);
-	PointCloud engineCloud("assets/pointclouds/point_cloud_engine.obj", 200);
+	PointCloud airCloud("assets/pointclouds/new/point_cloud_air.obj", 0.14f, 1.225f);
+	PointCloud engineCloud("assets/pointclouds/new/point_cloud_engine.obj", 200);
 
-	boatCloud.SetPointRadius(0.09f);
+	boatCloud.SetPointRadius(0.025f);
 	engineCloud.SetPointRadius(0.14f);
 
 	mPointClouds.resize((int)PointCloudType::COUNT);
@@ -182,7 +182,7 @@ void BoatEntity::UpdateSelf(double deltaTime)
 
 void BoatEntity::RenderSelf(RenderServer& renderServer)
 {
-	constexpr float radius = 0.14f;
+	constexpr float radius = 0.05f;
 
 	Transform pTransform;
 	pTransform.SetPosition(mCenterOfMass);
@@ -191,7 +191,7 @@ void BoatEntity::RenderSelf(RenderServer& renderServer)
 	renderServer.PushMesh(mSphereModel->GetMesh(0), pTransform.GetMatrix() * transform.GetMatrix());
 	renderServer.PushMaterial(mSphereModel->GetMaterial(0));
 
-	/*for (auto& point : GetPointCloud(PointCloudType::BOAT).GetPoints())
+	/*for (auto& point : GetPointCloud(PointCloudType::ENGINE).GetPoints())
 	{
 		Transform pTransform;
 		pTransform.SetPosition(point.position);
