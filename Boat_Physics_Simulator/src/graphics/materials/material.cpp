@@ -163,9 +163,12 @@ void Material::RenderImgui()
 			mIsDirty = true;
 		}
 
-		if (ImGui::DragFloat("Reflectiveness", &mReflectiveness, 0.02f, 0.0, 1.0f))
+		if (mCubemapTexture != nullptr)
 		{
-			mIsDirty = true;
+			if (ImGui::DragFloat("Reflectiveness", &mReflectiveness, 0.02f, 0.0, 1.0f))
+			{
+				mIsDirty = true;
+			}
 		}
 
 		if (mDisplacementMap != nullptr)
