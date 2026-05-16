@@ -51,16 +51,16 @@ public:
 	{
 		auto vShader = std::make_shared<VertexShader>("resources/VertexShader.cso");
 
-        auto& gameEntity = mScene->CreateEntity<Entity>();
-        gameEntity.SetName("Game");
-        gameEntity.SetVisible(true); // <-- SET FALSE FOR TITLE SCREEN
+		auto& gameEntity = mScene->CreateEntity<Entity>();
+		gameEntity.SetName("Game");
+		gameEntity.SetVisible(true); // <-- SET FALSE FOR TITLE SCREEN
 
-        auto mattiasModel = std::make_shared<OBJModel>("assets/mattias/mattias.obj", vShader, false);
+		auto mattiasModel = std::make_shared<OBJModel>("assets/mattias/mattias.obj", vShader, false);
 
-        auto& mattiasModelEntity = mScene->CreateEntity<ModelEntity>(mattiasModel);
-        mattiasModelEntity.SetName("Mattias Model");
-        mattiasModelEntity.transform.SetPosition(0, 2.35f, -3.50f);
-        mattiasModelEntity.transform.SetPitch(DirectX::XMConvertToRadians(-72));
+		auto& mattiasModelEntity = mScene->CreateEntity<ModelEntity>(mattiasModel);
+		mattiasModelEntity.SetName("Mattias Model");
+		mattiasModelEntity.transform.SetPosition(0, 2.35f, -3.50f);
+		mattiasModelEntity.transform.SetPitch(DirectX::XMConvertToRadians(-72));
 
 		auto& enviromentEntity = mScene->CreateEntity<EnviromentEntity>();
 		int ambientDivisor = 1;
@@ -75,8 +75,8 @@ public:
 		boatEntity.transform.SetPosition(0, 0.050f, 0);
 		inspectorEntity = &boatEntity;
 		boat = &boatEntity;
-        boatEntity.Attach(&gameEntity);
-        boatEntity.SetGameEntity(&gameEntity);
+		boatEntity.Attach(&gameEntity);
+		boatEntity.SetGameEntity(&gameEntity);
 
 		auto boatModel = std::make_shared<OBJModel>("assets/new_motorboat/motorboat.obj", vShader, true);
 
@@ -90,14 +90,14 @@ public:
 		auto cubeModel = std::make_shared<OBJModel>("assets/cube/cube.obj", vShader);
 		auto& cubeEntity = mScene->CreateEntity<ModelEntity>(cubeModel);
 		cubeEntity.Attach(&boatEntity);
-		cubeEntity.transform.SetPosition(-0.375, 0.3, 0.361);
+		cubeEntity.transform.SetPosition(-0.375f, 0.3f, 0.361f);
 		cubeEntity.transform.SetAngles(
 			DirectX::XMConvertToRadians(131.0f),
 			DirectX::XMConvertToRadians(1.0f),
 			DirectX::XMConvertToRadians(0)
 		);
 		cubeEntity.transform.SetScale(0.2f, 0.2f, 0.2f);
-		
+
 		auto& motorHingeEntity = mScene->CreateEntity<Entity>();
 		motorHingeEntity.Attach(&boatEntity);
 		motorHingeEntity.SetName("Motor Hinge");
@@ -132,7 +132,7 @@ public:
 			oceanEntity.transform.SetScale(100.0f, 1.0f, 100.0f);
 			oceanEntity.SetName("Ocean");
 			ocean = &oceanEntity;
-            oceanEntity.Attach(&gameEntity);
+			oceanEntity.Attach(&gameEntity);
 		}
 
 		auto& cameraEntity = mScene->CreateEntity<CameraEntity>();
