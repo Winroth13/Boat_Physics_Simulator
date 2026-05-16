@@ -168,6 +168,29 @@ void Material::RenderImgui()
 			mIsDirty = true;
 		}
 
+		if (mDisplacementMap != nullptr)
+		{
+			if (ImGui::DragFloat("Maximum Tesselation Factor", &mMaxTessFactor, 1.0f, 1.0f, 100.0f))
+			{
+				mIsDirty = true;
+			}
+
+			if (ImGui::DragFloat("Distance For Maximum Tessealtion", &mMaxTessDistance, 1.0f, 0.0f, mMinTessDistance))
+			{
+				mIsDirty = true;
+			}
+
+			if (ImGui::DragFloat("Distance For Minimum Tessealtion", &mMinTessDistance, 1.0f, mMaxTessDistance, 100.0f))
+			{
+				mIsDirty = true;
+			}
+
+			if (ImGui::DragFloat("Displacement Strength", &mDispStrength, 0.01f, 0.0f, 1.0f))
+			{
+				mIsDirty = true;
+			}
+		}
+
 		ImGui::TreePop();
 	}
 
