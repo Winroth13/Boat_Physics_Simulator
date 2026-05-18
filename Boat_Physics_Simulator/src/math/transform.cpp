@@ -254,7 +254,7 @@ void Transform::LookAt(
 		)
 	);
 
-	mIsDirty = false;
+	mIsDirty = true;
 }
 
 void Transform::LookAt(
@@ -317,7 +317,7 @@ const DirectX::XMFLOAT4X4 Transform::GetMatrixf()
 
 const DirectX::XMMATRIX Transform::GetRotationMatrix()
 {
-    return DirectX::XMMatrixRotationRollPitchYawFromVector(XMLoadFloat3(&mAngles));
+	return DirectX::XMMatrixRotationRollPitchYawFromVector(XMLoadFloat3(&mAngles));
 }
 
 // Move in global space
