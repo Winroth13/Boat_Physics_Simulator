@@ -24,11 +24,11 @@ public:
 
 	const std::vector<Point>& GetPoints() const { return mPoints; }
 
-	float GetTotalMass() const { return mPointMass * mPoints.size(); }
+	float GetTotalMass() const { return mPointMass * mPoints.size() * (6.0f / DirectX::XM_PI); }
 	float GetPointMass() const { return mPointMass; }
 	float GetPointRadius() const { return mPointRadius; }
 	float GetPointVolume() const { return (4.0f / 3.0f) * DirectX::XM_PI * powf(mPointRadius, 3); }
-	float GetVolume() const { return mPoints.size() * GetPointVolume(); }
+	float GetVolume() const { return mPoints.size() * GetPointVolume() * (6.0f / DirectX::XM_PI); }
 
 	float GetWidth()  const { return mBounds.mMax.x - mBounds.mMin.x; }
 	float GetHeight() const { return mBounds.mMax.y - mBounds.mMin.y; }
