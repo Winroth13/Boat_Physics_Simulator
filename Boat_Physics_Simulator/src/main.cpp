@@ -41,7 +41,7 @@ class TestApp : public App
 public:
 	Entity* inspectorEntity = nullptr;
 
-	Entity* cameraEntity;
+	Entity* camera;
 	Entity* ocean;
 	Entity* boat;
 
@@ -136,9 +136,15 @@ public:
 		}
 
 		auto& cameraEntity = mScene->CreateEntity<CameraEntity>();
-		cameraEntity.transform.SetPosition(0, 2.5f, -4.0f);
 		cameraEntity.transform.SetPitch(DirectX::XMConvertToRadians(18));
+		cameraEntity.transform.SetPosition(
+			DirectX::XMVectorAdd(
+				DirectX::XMVECTOR{ 0, 1, 0 },
+				DirectX::XMVectorScale(cameraEntity.transform.GetForwardDir(), -4)
+			)
+		);
 		cameraEntity.Attach(&boatEntity);
+		camera = &cameraEntity;
 	};
 
 	void Shutdown() override
@@ -148,62 +154,56 @@ public:
 	void Update(double delta) override
 	{
 		/* Only handle input if window is focused */
-		if (GetFocus() != NULL && false)
+		if (GetFocus() != NULL)
 		{
 			/* Camera Movement	*/
-			constexpr float SPEED = 3.0f;
 			constexpr float TURN_SPEED = 2.6f;
 
 			POINT newMousePos;
 
 			GetCursorPos(&newMousePos);
 
-			float speed = SPEED;
-			if (GetAsyncKeyState(VK_LSHIFT))
-			{
-				speed *= 3.0f;
-			}
-
-			/* Movement */
-			if (GetAsyncKeyState('W') & 0x8000)
-				cameraEntity->transform.MoveForward(speed * (float)delta);
-			if (GetAsyncKeyState('S') & 0x8000)
-				cameraEntity->transform.MoveForward(-speed * (float)delta);
-			if (GetAsyncKeyState('A') & 0x8000)
-				cameraEntity->transform.MoveRight(-speed * (float)delta);
-			if (GetAsyncKeyState('D') & 0x8000)
-				cameraEntity->transform.MoveRight(speed * (float)delta);
-			if (GetAsyncKeyState(VK_SPACE) & 0x8000)
-				cameraEntity->transform.MoveUp(speed * (float)delta);
-			if (GetAsyncKeyState(VK_LCONTROL) & 0x8000)
-				cameraEntity->transform.MoveUp(-speed * (float)delta);
-
+			bool cameraRotated = false;
 			/* Rotation */
 			if (GetAsyncKeyState(VK_LEFT) & 0x8000)
-				cameraEntity->transform.RotateY(-TURN_SPEED * (float)delta);
+			{
+				camera->transform.RotateY(TURN_SPEED * (float)delta);
+				cameraRotated = true;
+			}
 			if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
-				cameraEntity->transform.RotateY(TURN_SPEED * (float)delta);
+			{
+				camera->transform.RotateY(-TURN_SPEED * (float)delta);
+				cameraRotated = true;
+			}
 			if (GetAsyncKeyState(VK_UP) & 0x8000)
-				cameraEntity->transform.RotateX(-TURN_SPEED * (float)delta);
+			{
+				camera->transform.RotateX(TURN_SPEED * (float)delta);
+				cameraRotated = true;
+			}
 			if (GetAsyncKeyState(VK_DOWN) & 0x8000)
-				cameraEntity->transform.RotateX(TURN_SPEED * (float)delta);
+			{
+				camera->transform.RotateX(-TURN_SPEED * (float)delta);
+				cameraRotated = true;
+			}
 			if (GetAsyncKeyState(MK_RBUTTON) & 0x8000)
 			{
 				float dx = 0.25f * DirectX::XMConvertToRadians(static_cast<float>(newMousePos.x - previousMousePos.x));
 				float dy = 0.25f * DirectX::XMConvertToRadians(static_cast<float>(newMousePos.y - previousMousePos.y));
 
-				cameraEntity->transform.RotateX(TURN_SPEED * dy);
-				cameraEntity->transform.RotateY(TURN_SPEED * dx);
+				camera->transform.RotateX(TURN_SPEED * dy);
+				camera->transform.RotateY(TURN_SPEED * dx);
 
-				/* Clamp pitch */
-				if (cameraEntity->transform.GetAngles3f().x > DirectX::XM_PIDIV2)
-				{
-					cameraEntity->transform.SetPitch(DirectX::XM_PIDIV2);
-				}
-				else if (cameraEntity->transform.GetAngles3f().x < -DirectX::XM_PIDIV2)
-				{
-					cameraEntity->transform.SetPitch(-DirectX::XM_PIDIV2);
-				}
+				cameraRotated = true;
+			}
+
+			if (cameraRotated)
+			{
+				camera->transform.SetPosition(
+					DirectX::XMVectorAdd(
+						DirectX::XMVECTOR{ 0, 1, 0 },
+						DirectX::XMVectorScale(camera->transform.GetForwardDir(), -4)
+					)
+				);
 			}
 
 			/* Toggle Gizmo Operation */
