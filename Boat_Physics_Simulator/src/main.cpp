@@ -121,12 +121,27 @@ public:
 		{
 			auto vShaderWater = std::make_shared<VertexShader>("resources/WaterVertexShader.cso");
 
+			auto skyboxCubemap = std::make_shared<CubemapTexture>(
+				std::array<std::string, 6>
+				{
+					"assets/skybox/day/day_px.png",
+					"assets/skybox/day/day_nx.png",
+					"assets/skybox/day/day_py.png",
+					"assets/skybox/day/day_ny.png",
+					"assets/skybox/day/day_pz.png",
+					"assets/skybox/day/day_nz.png"
+				}
+			);
+
 			auto oceanModel = std::make_shared<OBJModel>("assets/ocean/ocean.obj", vShaderWater);
 			std::shared_ptr<Material> oceanMaterial = oceanModel->GetMaterialByName("Ocean");
 			oceanMaterial->SetMaxTessFactor(40.0f);
 			oceanMaterial->SetMinTessDistance(101.0f);
 			oceanMaterial->SetMaxTessDistance(100.0f);
 			oceanMaterial->SetDispStrength(0.3f);
+
+			oceanMaterial->SetCubemapTexture(skyboxCubemap);
+			oceanMaterial->SetReflectiveness(1.0f);
 
 			auto& oceanEntity = mScene->CreateEntity<ModelEntity>(oceanModel);
 			oceanEntity.transform.SetScale(100.0f, 1.0f, 100.0f);
