@@ -15,10 +15,7 @@ PointCloud::PointCloud(const std::string& pointCloudPath, float pointRadius, flo
 	mPointRadius = pointRadius;
 
 	ReadPoints(pointCloudPath);
-	float pointVolume = GetPointVolume();
-    float totalVolume = pointVolume * mPoints.size();
-
-	mPointMass = pointVolume * density;
+	mPointMass = density * GetPointVolume();
 }
 
 PointCloud::~PointCloud()
