@@ -101,7 +101,7 @@ private:
 
     /* Forces */
     float mThrustForce = 0.0f;
-    float mWaterDragForce = 0.0f;
+    DirectX::XMFLOAT3 mWaterDragForce = { 0.0f, 0.0f, 0.0f };
 
     float mWaterViscosity = 0.0f;
     float mReynoldsNumber = 0.0f;

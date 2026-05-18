@@ -30,7 +30,7 @@ float CalculateWaterDragForce(
     float boatVelocity
 )
 {
-    return 0.5f * waterDensity * areaUnderWater * CH * powf(boatVelocity, 2);
+    return 0.5f * waterDensity * areaUnderWater * CH * (boatVelocity * boatVelocity);
 }
 
 float CalculateMomentOfInertia(float length, float width, float mass)

@@ -75,8 +75,6 @@ void BoatEntity::UpdateSelf(double deltaTime)
     XMVECTOR velocity = XMLoadFloat3(&mVelocity);
     XMVECTOR acceleration = XMLoadFloat3(&mAcceleration);
 
-    float velocityScalar = XMVectorGetX(XMVector3Length(velocity));
-
 	/* Calculate Area */
 	mFrontAreaUnderWater = mAreaCalculator.CalculateArea(
 		mBoatModelEntity->GetModel(), 
@@ -136,27 +134,60 @@ void BoatEntity::UpdateSelf(double deltaTime)
 
 	mWaterViscosity = CalculateWaterViscosity(WATER_TEMPERATURE, SALT_WATER_CONSTANT);
     
-	mReynoldsNumber = CalculateReynolds(
-		WATER_DENSITY,
-		GetBoatLength(),
-		velocityScalar,
-		mWaterViscosity
-	);
+	/* Calculate forward water drag force */
+	{
+		XMVECTOR forward = transform.GetForwardDir();
+		float velocityForwardScalar = XMVectorGetX(XMVector3Dot(velocity, forward));
 
-	float cf = CalculateCf(mReynoldsNumber);
-	float cr = 0.0f; // We don't care about dynamic waves
-	mCh = cf + cr;
+		mReynoldsNumber = CalculateReynolds(
+			WATER_DENSITY,
+			GetBoatLength(),
+			velocityForwardScalar,
+			mWaterViscosity
+		);
 
-	mWaterDragForce = CalculateWaterDragForce(
-		WATER_DENSITY,
-		mFrontAreaUnderWater,
-		mCh,
-        velocityScalar
-	);
+		float cf = CalculateCf(mReynoldsNumber);
+		float cr = 0.0f; // We don't care about dynamic waves
+		mCh = cf + cr;
 
-    float accelerationForwardScalar = (mThrustForce - mWaterDragForce) / mMass;
+		mWaterDragForce.z = CalculateWaterDragForce(
+			WATER_DENSITY,
+			mFrontAreaUnderWater,
+			mCh,
+			velocityForwardScalar
+		);
+		XMVECTOR waterDragForceV = XMLoadFloat3(&mWaterDragForce);
+		XMMATRIX rotationMatrix = XMMatrixRotationY(mAngularVelocity);
+		waterDragForceV = XMVector3Transform(waterDragForceV, rotationMatrix);
+		XMStoreFloat3(&mWaterDragForce, waterDragForceV);
+	}
+
+	/* Calculate upwards water drag force */
+	{
+        float velocityUpScalar = fabsf(XMVectorGetY(velocity));
+
+		mReynoldsNumber = CalculateReynolds(
+			WATER_DENSITY,
+			GetBoatHeight(),
+			velocityUpScalar,
+			mWaterViscosity
+		);
+
+		float cf = CalculateCf(mReynoldsNumber);
+		float cr = 0.0f; // We don't care about dynamic waves
+		mCh = cf + cr;
+
+		mWaterDragForce.y = CalculateWaterDragForce(
+			WATER_DENSITY,
+			mBottomAreaUnderWater,
+			mCh,
+			velocityUpScalar
+		);
+	}
+
+    float accelerationForwardScalar = (mThrustForce - mWaterDragForce.z) / mMass;
     acceleration = accelerationForwardScalar * transform.GetForwardDir(); // Forward Thrust Force
-    acceleration -= XMVectorSet(0, GRAVITY, 0, 0);
+    acceleration += XMVectorSet(0, mWaterDragForce.y / mMass - GRAVITY, 0, 0);
 
 	/* Calculate Boat Volumes */
 	{
@@ -280,9 +311,13 @@ void BoatEntity::RenderImguiSelf()
 	if (ImGui::TreeNodeEx("Forces", TREE_NODE_FLAGS))
 	{
 		ImGui::TextColored(ImVec4(0, 1, 0, 1), "Thrust Force %.2f", mThrustForce);
-		ImGui::TextColored(ImVec4(1, 0, 0, 1), "Water Drag Force %.2f", mWaterDragForce);
 
-		ImGui::TextColored(ImVec4(1, 1, 1, 1), "Total Force %.2f", mThrustForce - mWaterDragForce);
+		ImGui::TextColored(ImVec4(1, 0, 0, 1), "Water Drag Force: ", mWaterDragForce.z);
+		ImGui::SameLine();
+		ImGui::TextColored(ImVec4(0, 1, 0, 1), "Y: %.2f ", mWaterDragForce.y);
+		ImGui::SameLine();
+		ImGui::TextColored(ImVec4(0, 0, 1, 1), "Z: %.2f", mWaterDragForce.z);
+
 		ImGui::TreePop();
 	}
 
