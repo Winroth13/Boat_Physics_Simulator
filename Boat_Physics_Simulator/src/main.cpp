@@ -72,7 +72,7 @@ public:
 		sunEntity.SetVisible(true);
 
 		auto& boatEntity = mScene->CreateEntity<BoatEntity>();
-		boatEntity.transform.SetPosition(0, 0.050f, 0);
+		boatEntity.transform.SetPosition(0, 8.0f, 0);
 		inspectorEntity = &boatEntity;
 		boat = &boatEntity;
 		boatEntity.Attach(&gameEntity);

@@ -36,6 +36,8 @@ private:
         ASCENDING
     };
 
+    static std::string BoatStateToString(BoatState state);
+
     enum class PointCloudType
     {
         BOAT,
@@ -77,11 +79,12 @@ private:
 
     float mUpdateTimer = 0.0f;
 
-    BoatState mBoatstate = BoatState::DEFAULT;
+    BoatState mState = BoatState::DEFAULT;
 
     /* Dampening */
     static constexpr float GAMMA = 5;
     float mDistanceToSurface = 0.0f;
+    float mTimeAscending = 0.0f;
 
     // Xi
     float mForwardUserInput = 0.0f;

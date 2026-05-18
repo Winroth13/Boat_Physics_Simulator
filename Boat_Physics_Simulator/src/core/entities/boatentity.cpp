@@ -79,8 +79,8 @@ void BoatEntity::UpdateSelf(double deltaTime)
 
 	/* Calculate Area */
 	mFrontAreaUnderWater = mAreaCalculator.CalculateArea(
-		mBoatModelEntity->GetModel(), 
-		transform, 
+		mBoatModelEntity->GetModel(),
+		transform,
 		{0, DirectX::XM_PI, 0}
 	);
 
@@ -127,15 +127,15 @@ void BoatEntity::UpdateSelf(double deltaTime)
         float waterInertia = A * (expf(k * mAngularVelocity) - 1);
         float angularDeceleration = waterInertia / momentOfInertia;
 
-        mAngularVelocity -= angularDeceleration * delta;
+		mAngularVelocity -= angularDeceleration * delta;
 
-        transform.RotateY(mAngularVelocity);
-        XMMATRIX rotationMatrix = XMMatrixRotationY(mAngularVelocity);
-        velocity = XMVector3Transform(velocity, rotationMatrix);
+		transform.RotateY(mAngularVelocity);
+		XMMATRIX rotationMatrix = XMMatrixRotationY(mAngularVelocity);
+		velocity = XMVector3Transform(velocity, rotationMatrix);
 	}
 
 	mWaterViscosity = CalculateWaterViscosity(WATER_TEMPERATURE, SALT_WATER_CONSTANT);
-    
+
 	/* Calculate forward water drag force */
 	{
 		XMVECTOR forward = transform.GetForwardDir();
@@ -164,32 +164,8 @@ void BoatEntity::UpdateSelf(double deltaTime)
 		XMStoreFloat3(&mWaterDragForce, waterDragForceV);
 	}
 
-	/* Calculate upwards water drag force */
-	{
-        float velocityUpScalar = fabsf(XMVectorGetY(velocity));
-
-		mReynoldsNumber = CalculateReynolds(
-			WATER_DENSITY,
-			GetBoatHeight(),
-			velocityUpScalar,
-			mWaterViscosity
-		);
-
-		float cf = CalculateCf(mReynoldsNumber);
-		float cr = 0.0f; // We don't care about dynamic waves
-		mCh = cf + cr;
-
-		mWaterDragForce.y = CalculateWaterDragForce(
-			WATER_DENSITY,
-			mBottomAreaUnderWater,
-			mCh,
-			velocityUpScalar
-		);
-	}
-
-    float accelerationForwardScalar = (mThrustForce - mWaterDragForce.z) / mMass;
-    acceleration = accelerationForwardScalar * transform.GetForwardDir(); // Forward Thrust Force
-    acceleration += XMVectorSet(0, mWaterDragForce.y / mMass - GRAVITY, 0, 0);
+	float accelerationForwardScalar = (mThrustForce - mWaterDragForce.z) / mMass;
+	acceleration = accelerationForwardScalar * transform.GetForwardDir(); // Forward Thrust Force
 
 	/* Calculate Boat Volumes */
 	{
@@ -198,7 +174,7 @@ void BoatEntity::UpdateSelf(double deltaTime)
 
 		SplitPointCloud(GetPointCloud(PointCloudType::BOAT), transform.GetMatrix(), 0.0f, above, below);
 		mVolumeUnderWater = below.GetVolume();
-    }
+	}
 
 	/* Calculate Air Volumes */
 	{
@@ -218,16 +194,82 @@ void BoatEntity::UpdateSelf(double deltaTime)
 		mVolumeUnderWater += below.GetVolume();
 	}
 
-    acceleration += WATER_DENSITY * mVolumeUnderWater / mMass * XMVectorSet(0, GRAVITY, 0, 0);
+	void(*f[])()={[](){}}; // :) :(
 
-    velocity += acceleration * delta;
+	switch (mState)
+    {
+		case BoatState::DEFAULT:
+		{
+			/* Calculate upwards water drag force */
+			{
+				float velocityUpScalar = fabsf(XMVectorGetY(velocity));
 
-    DirectX::XMStoreFloat3(&mVelocity, velocity);
-    DirectX::XMStoreFloat3(&mAcceleration, acceleration);
+				mReynoldsNumber = CalculateReynolds(
+					WATER_DENSITY,
+					GetBoatHeight(),
+					velocityUpScalar,
+					mWaterViscosity
+				);
 
-    transform.MoveX(mVelocity.x * delta);
-	transform.MoveY(mVelocity.y * delta);
-    transform.MoveZ(mVelocity.z * delta);
+				float cf = CalculateCf(mReynoldsNumber);
+				float cr = 0.0f; // We don't care about dynamic waves
+				mCh = cf + cr;
+
+				mWaterDragForce.y = CalculateWaterDragForce(
+					WATER_DENSITY,
+					mBottomAreaUnderWater,
+					mCh,
+					velocityUpScalar
+				);
+			}
+
+
+			acceleration += WATER_DENSITY * mVolumeUnderWater / mMass * XMVectorSet(0, GRAVITY, 0, 0);
+			acceleration += XMVectorSet(0, mWaterDragForce.y / mMass - GRAVITY, 0, 0);
+			velocity += acceleration * delta;
+
+			transform.MoveY(XMVectorGetY(velocity) * delta);
+
+			/* Check if we should start ascending */
+			if (mVelocity.y < 0.0f && XMVectorGetY(velocity) >= 0.0f)
+			{
+				mState = BoatState::ASCENDING;
+				mDistanceToSurface = transform.GetPosition3f().y;
+				mTimeAscending = 0.0f;
+			}
+		}
+		break;
+
+		case BoatState::ASCENDING:
+		{
+			mTimeAscending += delta;
+
+			acceleration *= XMVectorSet(1, 0, 1, 1);
+			velocity += acceleration * delta;
+
+			XMFLOAT3 position = transform.GetPosition3f();
+			position.y = CalculateDampenedBoatY(mDistanceToSurface, mTimeAscending, GAMMA);
+
+			/* Check if we have finished ascending */
+			if (position.y >= -0.05f)
+			{
+				mState = BoatState::DEFAULT;
+				position.y = 0.0f;
+			}
+
+            // NEXT: Change position of model / point cloud so that equilibrium is at y = 0 (with some "root" entity or smth idk)
+
+			transform.SetPosition(position);
+		}
+		break;
+	}
+
+	DirectX::XMStoreFloat3(&mVelocity, velocity);
+	DirectX::XMStoreFloat3(&mAcceleration, acceleration);
+
+	/* Always move in X and Z */
+	transform.MoveX(mVelocity.x * delta);
+	transform.MoveZ(mVelocity.z * delta);
 }
 
 void BoatEntity::RenderSelf(RenderServer& renderServer)
@@ -250,6 +292,21 @@ void BoatEntity::RenderSelf(RenderServer& renderServer)
 		renderServer.PushMesh(mSphereModel->GetMesh(0), pTransform.GetMatrix() * transform.GetMatrix());
 		renderServer.PushMaterial(mSphereModel->GetMaterial(0));
 	}*/
+}
+
+std::string BoatEntity::BoatStateToString(BoatState state)
+{
+	switch (state)
+	{
+	case BoatState::DEFAULT:
+		return "Default";
+
+	case BoatState::ASCENDING:
+		return "Ascending";
+
+	default:
+		return "How did this happen?";
+	}
 }
 
 static inline bool IsKeyDown(int vKey)
@@ -297,6 +354,8 @@ void BoatEntity::RenderImguiSelf()
     }
 
 	ImGui::Checkbox("Pause", &mPause);
+
+	ImGui::Text("State: %s", BoatStateToString(mState).c_str());
 
 	ImGui::TextColored(ImVec4(0, 1, 0, 1), "Reynolds: %.2f", mReynoldsNumber);
 	ImGui::TextColored(ImVec4(0, 1, 0, 1), "Water Viscosity %f pas", mWaterViscosity);
