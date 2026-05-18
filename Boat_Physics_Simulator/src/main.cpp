@@ -53,14 +53,15 @@ public:
 
 		auto& gameEntity = mScene->CreateEntity<Entity>();
 		gameEntity.SetName("Game");
-		gameEntity.SetVisible(true); // <-- SET FALSE FOR TITLE SCREEN
+		gameEntity.SetVisible(!USE_TITLE_SCREEN); // <-- SET FALSE FOR TITLE SCREEN
 
 		auto mattiasModel = std::make_shared<OBJModel>("assets/mattias/mattias.obj", vShader, false);
 
 		auto& mattiasModelEntity = mScene->CreateEntity<ModelEntity>(mattiasModel);
 		mattiasModelEntity.SetName("Mattias Model");
-		mattiasModelEntity.transform.SetPosition(0, 2.35f, -3.50f);
+		mattiasModelEntity.transform.SetPosition(0, 9.95f, -3.1f);
 		mattiasModelEntity.transform.SetPitch(DirectX::XMConvertToRadians(-72));
+		mattiasModelEntity.transform.SetScale(1.68f, 1.0f, 1.3f);
 
 		auto& enviromentEntity = mScene->CreateEntity<EnviromentEntity>();
 		int ambientDivisor = 1;
@@ -123,14 +124,14 @@ public:
 
 			auto skyboxCubemap = std::make_shared<CubemapTexture>(
 				std::array<std::string, 6>
-				{
-					"assets/skybox/day/day_px.png",
+			{
+				"assets/skybox/day/day_px.png",
 					"assets/skybox/day/day_nx.png",
 					"assets/skybox/day/day_py.png",
 					"assets/skybox/day/day_ny.png",
 					"assets/skybox/day/day_pz.png",
 					"assets/skybox/day/day_nz.png"
-				}
+			}
 			);
 
 			auto oceanModel = std::make_shared<OBJModel>("assets/ocean/ocean.obj", vShaderWater);

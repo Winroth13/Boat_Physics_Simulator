@@ -10,122 +10,124 @@
 #include <memory>
 #include <DirectXMath.h>
 
+#define USE_TITLE_SCREEN true
+
 class BoatEntity : public Entity
 {
 public:
-    BoatEntity();
-    ~BoatEntity();
+	BoatEntity();
+	~BoatEntity();
 
-    void SetMotorHingeEntity(Entity* e) { mMotorHingeEntity = e; }
-    void SetPropellerEntity(Entity* e) { mPropellerEntity = e; }
-    void SetBoatModelEntity(ModelEntity* e) { mBoatModelEntity = e; }
-    void SetGameEntity(Entity* e) { mGameEntity = e; }
+	void SetMotorHingeEntity(Entity* e) { mMotorHingeEntity = e; }
+	void SetPropellerEntity(Entity* e) { mPropellerEntity = e; }
+	void SetBoatModelEntity(ModelEntity* e) { mBoatModelEntity = e; }
+	void SetGameEntity(Entity* e) { mGameEntity = e; }
 
 protected:
-    virtual void BeginSelf(RenderServer& renderServer) override;
-    virtual void UpdateSelf(double delta) override;
-    virtual void RenderSelf(RenderServer& renderServer) override;
+	virtual void BeginSelf(RenderServer& renderServer) override;
+	virtual void UpdateSelf(double delta) override;
+	virtual void RenderSelf(RenderServer& renderServer) override;
 
-    void Input(float deltaTime);
-    virtual void RenderImguiSelf() override;
-
-private:
-    enum class BoatState
-    {
-        DEFAULT,
-        ASCENDING
-    };
-
-    static std::string BoatStateToString(BoatState state);
-
-    enum class PointCloudType
-    {
-        BOAT,
-        AIR,
-        ENGINE,
-
-        COUNT
-    };
-
-    PointCloud& GetPointCloud(PointCloudType type) { return mPointClouds[static_cast<int>(type)]; }
-
-    float GetBoatLength() { return GetPointCloud(PointCloudType::BOAT).GetLength(); }
-    float GetBoatWidth()  { return GetPointCloud(PointCloudType::BOAT).GetWidth();  }
-    float GetBoatHeight() { return GetPointCloud(PointCloudType::BOAT).GetHeight(); }
+	void Input(float deltaTime);
+	virtual void RenderImguiSelf() override;
 
 private:
-    static constexpr float UPDATE_RATE = 1 / 60.0f;
-    static constexpr float GRAVITY = 9.82f;
+	enum class BoatState
+	{
+		DEFAULT,
+		ASCENDING
+	};
 
-    static constexpr float SALT_WATER_CONSTANT = 1.08f;
-    static constexpr float FRESH_WATER_CONSTANT = 1;
-    static constexpr float WATER_DENSITY = 1000;
-    static constexpr float WATER_TEMPERATURE = 273.15f + 10;
+	static std::string BoatStateToString(BoatState state);
 
-    static constexpr float BOAT_MAX_TURN_ANGLE = DirectX::XMConvertToRadians(30);
+	enum class PointCloudType
+	{
+		BOAT,
+		AIR,
+		ENGINE,
 
-    DirectX::XMFLOAT3 mCenterOfMass;
+		COUNT
+	};
 
-    std::unique_ptr<OBJModel> mSphereModel;
+	PointCloud& GetPointCloud(PointCloudType type) { return mPointClouds[static_cast<int>(type)]; }
 
-    std::vector<PointCloud> mPointClouds;
+	float GetBoatLength() { return GetPointCloud(PointCloudType::BOAT).GetLength(); }
+	float GetBoatWidth() { return GetPointCloud(PointCloudType::BOAT).GetWidth(); }
+	float GetBoatHeight() { return GetPointCloud(PointCloudType::BOAT).GetHeight(); }
 
-    AreaCalculator mAreaCalculator;
+private:
+	static constexpr float UPDATE_RATE = 1 / 60.0f;
+	static constexpr float GRAVITY = 9.82f;
 
-    Entity* mMotorHingeEntity = nullptr;
-    Entity* mPropellerEntity = nullptr;
-    ModelEntity* mBoatModelEntity = nullptr;
-    Entity* mGameEntity = nullptr;
+	static constexpr float SALT_WATER_CONSTANT = 1.08f;
+	static constexpr float FRESH_WATER_CONSTANT = 1;
+	static constexpr float WATER_DENSITY = 1000;
+	static constexpr float WATER_TEMPERATURE = 273.15f + 10;
 
-    float mUpdateTimer = 0.0f;
+	static constexpr float BOAT_MAX_TURN_ANGLE = DirectX::XMConvertToRadians(30);
 
-    BoatState mState = BoatState::DEFAULT;
+	DirectX::XMFLOAT3 mCenterOfMass;
 
-    /* Dampening */
-    static constexpr float GAMMA = 5;
-    float mDistanceToSurface = 0.0f;
-    float mTimeAscending = 0.0f;
+	std::unique_ptr<OBJModel> mSphereModel;
 
-    // Xi
-    float mForwardUserInput = 0.0f;
-    float mForwardTimeToMaxInput = 1.0f;
-    float mForwardInputTimer = 0.0f;
+	std::vector<PointCloud> mPointClouds;
 
-    float mTurnUserInput = 0.0f;
-    float mTurnTimeToMaxInput = 2.0f;
-    float mTurnInputTimer = mTurnTimeToMaxInput / 2.0f;
+	AreaCalculator mAreaCalculator;
 
-    float GetTurnAngle() { return mTurnUserInput * BOAT_MAX_TURN_ANGLE; }
+	Entity* mMotorHingeEntity = nullptr;
+	Entity* mPropellerEntity = nullptr;
+	ModelEntity* mBoatModelEntity = nullptr;
+	Entity* mGameEntity = nullptr;
 
-    /* Constants */
-    float mMass = 1000.0f;
-    float mWakeFactor = 0.06f;
-    // Eta_p
-    float mTotalEfficiency = 0.7f; // How much of the engine power that is conserved
-    // Eta_H
-    float mHullEfficiency = 0.95f;
+	float mUpdateTimer = 0.0f;
 
-    float mEnginePower = 20000;
+	BoatState mState = BoatState::DEFAULT;
 
-    DirectX::XMFLOAT3 mVelocity = { 0, 0, 20 };
-    float forwardAcceleration = 0.0f;
+	/* Dampening */
+	static constexpr float GAMMA = 5;
+	float mDistanceToSurface = 0.0f;
+	float mTimeAscending = 0.0f;
 
-    DirectX::XMFLOAT3 mAcceleration = { 0, 0, 0 };
+	// Xi
+	float mForwardUserInput = 0.0f;
+	float mForwardTimeToMaxInput = 1.0f;
+	float mForwardInputTimer = 0.0f;
 
-    float mAngularVelocity = 0.0f;
+	float mTurnUserInput = 0.0f;
+	float mTurnTimeToMaxInput = 2.0f;
+	float mTurnInputTimer = mTurnTimeToMaxInput / 2.0f;
 
-    /* Forces */
-    float mThrustForce = 0.0f;
-    DirectX::XMFLOAT3 mWaterDragForce = { 0.0f, 0.0f, 0.0f };
+	float GetTurnAngle() { return mTurnUserInput * BOAT_MAX_TURN_ANGLE; }
 
-    float mWaterViscosity = 0.0f;
-    float mReynoldsNumber = 0.0f;
-    float mCh = 0.0f;
+	/* Constants */
+	float mMass = 1000.0f;
+	float mWakeFactor = 0.06f;
+	// Eta_p
+	float mTotalEfficiency = 0.7f; // How much of the engine power that is conserved
+	// Eta_H
+	float mHullEfficiency = 0.95f;
 
-    bool mPause = false; // <-- SET TRUE FOR START SCREEN :)
+	float mEnginePower = 20000;
 
-    float mVolumeUnderWater = 0.0f;
+	DirectX::XMFLOAT3 mVelocity = { 0, 0, 20 };
+	float forwardAcceleration = 0.0f;
 
-    float mFrontAreaUnderWater = 0.0f;
-    float mBottomAreaUnderWater = 0.0f;
+	DirectX::XMFLOAT3 mAcceleration = { 0, 0, 0 };
+
+	float mAngularVelocity = 0.0f;
+
+	/* Forces */
+	float mThrustForce = 0.0f;
+	DirectX::XMFLOAT3 mWaterDragForce = { 0.0f, 0.0f, 0.0f };
+
+	float mWaterViscosity = 0.0f;
+	float mReynoldsNumber = 0.0f;
+	float mCh = 0.0f;
+
+	bool mPause = USE_TITLE_SCREEN; // <-- SET TRUE FOR TITLE SCREEN :)
+
+	float mVolumeUnderWater = 0.0f;
+
+	float mFrontAreaUnderWater = 0.0f;
+	float mBottomAreaUnderWater = 0.0f;
 };
