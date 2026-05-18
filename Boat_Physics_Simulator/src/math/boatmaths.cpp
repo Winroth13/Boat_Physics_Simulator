@@ -113,3 +113,8 @@ float CalculateFrontArea(PointCloud& pointCloud)
 {
     return 0.0f;
 }
+
+float CalculateDampenedBoatY(float distanceToSurface, float time, float gamma)
+{
+    return distanceToSurface * expf(-(gamma / 2.0f) * time);
+}

@@ -55,6 +55,8 @@ void BoatEntity::BeginSelf(RenderServer& renderServer)
 
 	mCenterOfMass = CalculateCenterOfMass(mPointClouds);
 	mMass = boatCloud.GetTotalMass() + engineCloud.GetTotalMass();
+
+    // TODO: Calculate y position of equilibrium for the boat
 }
 
 void BoatEntity::UpdateSelf(double deltaTime)

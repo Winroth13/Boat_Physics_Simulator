@@ -34,3 +34,5 @@ void SplitPointCloud(
 );
 
 float CalculateFrontArea(PointCloud& pointCloud);
+
+float CalculateDampenedBoatY(float distanceToSurface, float time, float gamma);

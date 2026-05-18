@@ -30,6 +30,12 @@ protected:
     virtual void RenderImguiSelf() override;
 
 private:
+    enum class BoatState
+    {
+        DEFAULT,
+        ASCENDING
+    };
+
     enum class PointCloudType
     {
         BOAT,
@@ -70,6 +76,12 @@ private:
     Entity* mGameEntity = nullptr;
 
     float mUpdateTimer = 0.0f;
+
+    BoatState mBoatstate = BoatState::DEFAULT;
+
+    /* Dampening */
+    static constexpr float GAMMA = 5;
+    float mDistanceToSurface = 0.0f;
 
     // Xi
     float mForwardUserInput = 0.0f;
