@@ -141,7 +141,7 @@ public:
 			oceanMaterial->SetDispStrength(0.3f);
 
 			oceanMaterial->SetCubemapTexture(skyboxCubemap);
-			oceanMaterial->SetReflectiveness(1.0f);
+			oceanMaterial->SetReflectiveness(0.2f);
 
 			auto& oceanEntity = mScene->CreateEntity<ModelEntity>(oceanModel);
 			oceanEntity.transform.SetScale(100.0f, 1.0f, 100.0f);
