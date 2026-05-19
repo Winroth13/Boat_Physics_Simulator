@@ -73,16 +73,21 @@ public:
 		sunEntity.SetVisible(true);
 
 		auto& boatEntity = mScene->CreateEntity<BoatEntity>();
-		boatEntity.transform.SetPosition(0, 8.0f, 0);
+		boatEntity.transform.SetPosition(0, 0.0f, 0);
 		inspectorEntity = &boatEntity;
 		boat = &boatEntity;
 		boatEntity.Attach(&gameEntity);
 		boatEntity.SetGameEntity(&gameEntity);
 
+		auto& rootEntity = mScene->CreateEntity<Entity>();
+		rootEntity.Attach(&boatEntity);
+		rootEntity.transform.SetPosition(0, 0.28f, 0);
+		rootEntity.SetName("Root");
+
 		auto boatModel = std::make_shared<OBJModel>("assets/new_motorboat/motorboat.obj", vShader, true);
 
 		auto& boatModelEntity = mScene->CreateEntity<ModelEntity>(boatModel);
-		boatModelEntity.Attach(&boatEntity);
+		boatModelEntity.Attach(&rootEntity);
 		boatModelEntity.SetName("Boat Model");
 		boatModelEntity.transform.SetPosition(0, 0, 0);
 		boatModelEntity.transform.SetScale(1, 1, 1);
@@ -90,7 +95,7 @@ public:
 
 		auto cubeModel = std::make_shared<OBJModel>("assets/cube/cube.obj", vShader);
 		auto& cubeEntity = mScene->CreateEntity<ModelEntity>(cubeModel);
-		cubeEntity.Attach(&boatEntity);
+		cubeEntity.Attach(&rootEntity);
 		cubeEntity.transform.SetPosition(-0.375f, 0.3f, 0.361f);
 		cubeEntity.transform.SetAngles(
 			DirectX::XMConvertToRadians(131.0f),
@@ -100,7 +105,7 @@ public:
 		cubeEntity.transform.SetScale(0.2f, 0.2f, 0.2f);
 
 		auto& motorHingeEntity = mScene->CreateEntity<Entity>();
-		motorHingeEntity.Attach(&boatEntity);
+		motorHingeEntity.Attach(&rootEntity);
 		motorHingeEntity.SetName("Motor Hinge");
 		motorHingeEntity.transform.SetPosition(0.0f, 0.1f, -1.9f);
 		boatEntity.SetMotorHingeEntity(&motorHingeEntity);
@@ -159,7 +164,7 @@ public:
 				DirectX::XMVectorScale(cameraEntity.transform.GetForwardDir(), -4)
 			)
 		);
-		cameraEntity.Attach(&boatEntity);
+		cameraEntity.Attach(&rootEntity);
 		camera = &cameraEntity;
 	};
 

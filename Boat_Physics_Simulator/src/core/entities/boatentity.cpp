@@ -74,6 +74,7 @@ void BoatEntity::UpdateSelf(double deltaTime)
 
 	Input(delta);
 
+#if 1
     XMVECTOR velocity = XMLoadFloat3(&mVelocity);
     XMVECTOR acceleration = XMLoadFloat3(&mAcceleration);
 
@@ -167,12 +168,14 @@ void BoatEntity::UpdateSelf(double deltaTime)
 	float accelerationForwardScalar = (mThrustForce - mWaterDragForce.z) / mMass;
 	acceleration = accelerationForwardScalar * transform.GetForwardDir(); // Forward Thrust Force
 
+	XMMATRIX transformMatrix = mBoatModelEntity->GetGlobalTransform();
+
 	/* Calculate Boat Volumes */
 	{
 		PointCloud above;
 		PointCloud below;
 
-		SplitPointCloud(GetPointCloud(PointCloudType::BOAT), transform.GetMatrix(), 0.0f, above, below);
+		SplitPointCloud(GetPointCloud(PointCloudType::BOAT), transformMatrix, 0.0f, above, below);
 		mVolumeUnderWater = below.GetVolume();
 	}
 
@@ -181,7 +184,7 @@ void BoatEntity::UpdateSelf(double deltaTime)
 		PointCloud above;
 		PointCloud below;
 
-		SplitPointCloud(GetPointCloud(PointCloudType::AIR), transform.GetMatrix(), 0.0f, above, below);
+		SplitPointCloud(GetPointCloud(PointCloudType::AIR), transformMatrix, 0.0f, above, below);
 		mVolumeUnderWater += below.GetVolume();
 	}
 
@@ -190,12 +193,10 @@ void BoatEntity::UpdateSelf(double deltaTime)
 		PointCloud above;
 		PointCloud below;
 
-		SplitPointCloud(GetPointCloud(PointCloudType::ENGINE), transform.GetMatrix(), 0.0f, above, below);
+		SplitPointCloud(GetPointCloud(PointCloudType::ENGINE), transformMatrix, 0.0f, above, below);
 		mVolumeUnderWater += below.GetVolume();
 	}
-
-	void(*f[])()={[](){}}; // :) :(
-
+    
 	switch (mState)
     {
 		case BoatState::DEFAULT:
@@ -224,8 +225,19 @@ void BoatEntity::UpdateSelf(double deltaTime)
 			}
 
 
-			acceleration += WATER_DENSITY * mVolumeUnderWater / mMass * XMVectorSet(0, GRAVITY, 0, 0);
-			acceleration += XMVectorSet(0, mWaterDragForce.y / mMass - GRAVITY, 0, 0);
+			float liftAcceleration = WATER_DENSITY * mVolumeUnderWater / mMass * GRAVITY;
+			acceleration += XMVectorSet(0, liftAcceleration + mWaterDragForce.y / mMass - GRAVITY, 0, 0);
+
+			/* 
+			*	When Lift Acceleration is almost equal to Gravity, 
+			*	force acceleration to move towards 0 to prevent
+			*	too much bouncing on the water.
+			*/
+			if (fabsf(liftAcceleration - GRAVITY) < 0.25f)
+			{
+				acceleration *= XMVectorSet(0.0f, 0.01f, 0.0f, 0.0f);
+			}
+
 			velocity += acceleration * delta;
 
 			transform.MoveY(XMVectorGetY(velocity) * delta);
@@ -270,6 +282,42 @@ void BoatEntity::UpdateSelf(double deltaTime)
 	/* Always move in X and Z */
 	transform.MoveX(mVelocity.x * delta);
 	transform.MoveZ(mVelocity.z * delta);
+#else
+	XMMATRIX transformMatrix = mBoatModelEntity->GetGlobalTransform();
+
+	PointCloud boatAbove;
+	PointCloud boatBelow;
+
+	PointCloud airAbove;
+	PointCloud airBelow;
+
+	PointCloud engineAbove;
+	PointCloud engineBelow;
+
+	/* Calculate Boat Volumes */
+	{
+		SplitPointCloud(GetPointCloud(PointCloudType::BOAT), transformMatrix, 0.0f, boatAbove, boatBelow);
+		mVolumeUnderWater = boatBelow.GetVolume();
+	}
+
+	/* Calculate Air Volumes */
+	{
+		SplitPointCloud(GetPointCloud(PointCloudType::AIR), transformMatrix, 0.0f, airAbove, airBelow);
+		mVolumeUnderWater += airBelow.GetVolume();
+	}
+
+	/* Calculate Engine Volumes */
+	{
+		SplitPointCloud(GetPointCloud(PointCloudType::ENGINE), transformMatrix, 0.0f, engineAbove, engineBelow);
+		mVolumeUnderWater += engineBelow.GetVolume();
+	}
+
+	float liftAcceleration = WATER_DENSITY * mVolumeUnderWater / mMass * GRAVITY;
+	float gravityAcceleration = GRAVITY;
+
+	Logger::Info(std::to_string(liftAcceleration - gravityAcceleration));
+
+#endif
 }
 
 void BoatEntity::RenderSelf(RenderServer& renderServer)
@@ -283,15 +331,15 @@ void BoatEntity::RenderSelf(RenderServer& renderServer)
 	renderServer.PushMesh(mSphereModel->GetMesh(0), pTransform.GetMatrix() * transform.GetMatrix());
 	renderServer.PushMaterial(mSphereModel->GetMaterial(0));
 
-	/*for (auto& point : GetPointCloud(PointCloudType::ENGINE).GetPoints())
+	for (auto& point : GetPointCloud(PointCloudType::AIR).GetPoints())
 	{
 		Transform pTransform;
 		pTransform.SetPosition(point.position);
 		pTransform.SetScale(radius, radius, radius);
 
-		renderServer.PushMesh(mSphereModel->GetMesh(0), pTransform.GetMatrix() * transform.GetMatrix());
+		renderServer.PushMesh(mSphereModel->GetMesh(0), pTransform.GetMatrix() * mBoatModelEntity->GetGlobalTransform());
 		renderServer.PushMaterial(mSphereModel->GetMaterial(0));
-	}*/
+	}
 }
 
 std::string BoatEntity::BoatStateToString(BoatState state)

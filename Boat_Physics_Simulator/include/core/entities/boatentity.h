@@ -10,7 +10,7 @@
 #include <memory>
 #include <DirectXMath.h>
 
-#define USE_TITLE_SCREEN true
+#define USE_TITLE_SCREEN false
 
 class BoatEntity : public Entity
 {
@@ -77,6 +77,7 @@ private:
 	Entity* mMotorHingeEntity = nullptr;
 	Entity* mPropellerEntity = nullptr;
 	ModelEntity* mBoatModelEntity = nullptr;
+	Entity* mRootEntity = nullptr;
 	Entity* mGameEntity = nullptr;
 
 	float mUpdateTimer = 0.0f;
