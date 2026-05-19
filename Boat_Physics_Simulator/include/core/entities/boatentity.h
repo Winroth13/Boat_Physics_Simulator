@@ -10,7 +10,7 @@
 #include <memory>
 #include <DirectXMath.h>
 
-#define USE_TITLE_SCREEN true
+#define USE_TITLE_SCREEN false
 
 class BoatEntity : public Entity
 {

@@ -58,7 +58,7 @@ public:
 		auto mattiasModel = std::make_shared<OBJModel>("assets/mattias/mattias.obj", vShader, false);
 
 		auto& mattiasModelEntity = mScene->CreateEntity<ModelEntity>(mattiasModel);
-		mattiasModelEntity.SetName("Mattias Model");
+		mattiasModelEntity.SetName("Title Screen");
 		mattiasModelEntity.transform.SetPosition(0, 9.95f, -3.1f);
 		mattiasModelEntity.transform.SetPitch(DirectX::XMConvertToRadians(-72));
 		mattiasModelEntity.transform.SetScale(1.68f, 1.0f, 1.3f);
@@ -83,7 +83,7 @@ public:
 		rootEntity.Attach(&boatEntity);
 		rootEntity.transform.SetPosition(0, 0.28f, 0);
 		rootEntity.SetName("Root");
-        boatEntity.SetRootEntity(&rootEntity);
+		boatEntity.SetRootEntity(&rootEntity);
 
 		auto boatModel = std::make_shared<OBJModel>("assets/new_motorboat/motorboat.obj", vShader, true);
 
@@ -104,6 +104,7 @@ public:
 			DirectX::XMConvertToRadians(0)
 		);
 		cubeEntity.transform.SetScale(0.2f, 0.2f, 0.2f);
+		cubeEntity.SetName("Mattias");
 
 		auto& motorHingeEntity = mScene->CreateEntity<Entity>();
 		motorHingeEntity.Attach(&rootEntity);
@@ -217,11 +218,11 @@ public:
 
 				cameraRotated = true;
 			}
-			
-            //DirectX::XMFLOAT3 angles = camera->transform.GetAngles3f();
-            //angles.x = 0.0f;
-            //camera->transform.SetAngles(angles);
-            //camera->transform.RotateX(-boat->transform.GetAngles3f().x);
+
+			//DirectX::XMFLOAT3 angles = camera->transform.GetAngles3f();
+			//angles.x = 0.0f;
+			//camera->transform.SetAngles(angles);
+			//camera->transform.RotateX(-boat->transform.GetAngles3f().x);
 
 			if (cameraRotated)
 			{

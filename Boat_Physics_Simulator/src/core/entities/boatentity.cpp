@@ -460,24 +460,24 @@ void BoatEntity::UpdateSelf(double deltaTime)
 
 void BoatEntity::RenderSelf(RenderServer& renderServer)
 {
-	constexpr float radius = 0.025f;
+	// constexpr float radius = 0.025f;
 
-	Transform pTransform;
-	pTransform.SetPosition(mCenterOfMass);
-	pTransform.SetScale(radius, radius, radius);
+	// Transform pTransform;
+	// pTransform.SetPosition(mCenterOfMass);
+	// pTransform.SetScale(radius, radius, radius);
 
-	renderServer.PushMesh(mSphereModel->GetMesh(0), pTransform.GetMatrix() * transform.GetMatrix());
-	renderServer.PushMaterial(mSphereModel->GetMaterial(0));
+	// renderServer.PushMesh(mSphereModel->GetMesh(0), pTransform.GetMatrix() * transform.GetMatrix());
+	// renderServer.PushMaterial(mSphereModel->GetMaterial(0));
 
-	for (auto& point : GetPointCloud(PointCloudType::AIR).GetPoints())
-	{
-		Transform pTransform;
-		pTransform.SetPosition(point.position);
-		pTransform.SetScale(radius, radius, radius);
+	// for (auto& point : GetPointCloud(PointCloudType::AIR).GetPoints())
+	// {
+	// 	Transform pTransform;
+	// 	pTransform.SetPosition(point.position);
+	// 	pTransform.SetScale(radius, radius, radius);
 
-		renderServer.PushMesh(mSphereModel->GetMesh(0), pTransform.GetMatrix() * mBoatModelEntity->GetGlobalTransform());
-		renderServer.PushMaterial(mSphereModel->GetMaterial(0));
-	}
+	// 	renderServer.PushMesh(mSphereModel->GetMesh(0), pTransform.GetMatrix() * mBoatModelEntity->GetGlobalTransform());
+	// 	renderServer.PushMaterial(mSphereModel->GetMaterial(0));
+	// }
 }
 
 std::string BoatEntity::BoatStateToString(BoatState state)
