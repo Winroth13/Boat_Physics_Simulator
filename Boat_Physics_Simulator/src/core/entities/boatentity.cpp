@@ -96,9 +96,22 @@ void BoatEntity::UpdateSelf(double deltaTime)
 		XMVECTOR forward = transform.GetForwardDir();
 		float velocityForwardScalar = XMVectorGetX(XMVector3Dot(velocity, forward));
 
-		float numerator = (mForwardUserInput * mTotalEfficiency * mEnginePower);
-		float denominator = (mHullEfficiency * velocityForwardScalar * (1 - mWakeFactor));
-		mThrustForce = numerator / denominator;
+		if (mForwardUserInput > 0.0f && velocityForwardScalar < MIN_VELOCITY) // If you start the boat when standing still
+		{
+			velocityForwardScalar = MIN_VELOCITY;
+		}
+
+		if (velocityForwardScalar >= MIN_VELOCITY) // If the velocity is low enough, the boat stops
+		{
+			float numerator = (mForwardUserInput * mTotalEfficiency * mEnginePower);
+			float denominator = (mHullEfficiency * velocityForwardScalar * (1 - mWakeFactor));
+			mThrustForce = numerator / denominator;
+		}
+		else
+		{
+			velocity *= XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+			mThrustForce = 0;
+		}
 	}
 
 	/* Calculate Angular Velocity */
@@ -223,14 +236,14 @@ void BoatEntity::UpdateSelf(double deltaTime)
 		*	When Lift Acceleration is almost equal to Gravity,
 		*	force acceleration and velocity to 0 to prevent
 		*	too much bouncing on the water.
-		*   
+		*
 		*   It's probably the balls' fault that we have to do this
 		*	since it's impossible to find the perfect equilibrium.
 		*/
 		if (
 			fabsf(liftAcceleration - GRAVITY) < EQUILIBRIUM_ACCELERATION_THRESHOLD &&
 			fabsf(XMVectorGetY(velocity)) < EQUILIBRIUM_VELOCITY_THRESHOLD
-		)
+			)
 		{
 			acceleration *= XMVectorSet(1, 0, 1, 1);
 			velocity *= XMVectorSet(1, 0, 1, 1);
@@ -463,10 +476,10 @@ void BoatEntity::RenderImguiSelf()
 
 	if (ImGui::TreeNodeEx("Motion", TREE_NODE_FLAGS))
 	{
-		ImGui::DragFloat3("Velocity", &mVelocity.x, 0.01f, 0, FLT_MAX, "%.1f m/s");
-		ImGui::DragFloat3("Acceleration", &mAcceleration.x, 0.01f, 0, FLT_MAX, "%.1f m/s^2");
+		ImGui::DragFloat3("Velocity", &mVelocity.x, 0.01f, 0, FLT_MAX, "%.2f m/s");
+		ImGui::DragFloat3("Acceleration", &mAcceleration.x, 0.01f, 0, FLT_MAX, "%.2f m/s^2");
 
-		ImGui::DragFloat("Angular Velocity", &mAngularVelocity, 0.01f, 0, FLT_MAX, "%.1f rad/s");
+		ImGui::DragFloat("Angular Velocity", &mAngularVelocity, 0.01f, 0, FLT_MAX, "%.2f rad/s");
 		ImGui::TreePop();
 	}
 }

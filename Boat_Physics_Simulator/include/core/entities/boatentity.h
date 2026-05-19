@@ -69,6 +69,8 @@ private:
 	static constexpr float EQUILIBRIUM_ACCELERATION_THRESHOLD = 0.4f;
 	static constexpr float EQUILIBRIUM_VELOCITY_THRESHOLD = 0.3f;
 
+	static constexpr float MIN_VELOCITY = 0.1f;
+
 	DirectX::XMFLOAT3 mCenterOfMass;
 
 	std::unique_ptr<OBJModel> mSphereModel;
