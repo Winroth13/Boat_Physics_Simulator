@@ -204,19 +204,7 @@ void BoatEntity::UpdateSelf(double deltaTime)
 	{
 		/* Calculate upwards water drag force */
 		{
-			float velocityTotalScalar = XMVectorGetX(XMVector3Length(velocity));
 			float velocityUpScalar = fabsf(XMVectorGetY(velocity));
-
-			mReynoldsNumber = CalculateReynolds(
-				WATER_DENSITY,
-				GetBoatHeight(),
-				velocityTotalScalar,
-				mWaterViscosity
-			);
-
-			float cf = CalculateCf(mReynoldsNumber);
-			float cr = 0.0f; // We don't care about dynamic waves
-			mCh = cf + cr;
 
 			mWaterDragForce.y = CalculateWaterDragForce(
 				WATER_DENSITY,

@@ -66,8 +66,8 @@ private:
 
 	static constexpr float BOAT_MAX_TURN_ANGLE = DirectX::XMConvertToRadians(30);
 
-	static constexpr float EQUILIBRIUM_ACCELERATION_THRESHOLD = 0.3f;
-	static constexpr float EQUILIBRIUM_VELOCITY_THRESHOLD = 0.2f;
+	static constexpr float EQUILIBRIUM_ACCELERATION_THRESHOLD = 0.4f;
+	static constexpr float EQUILIBRIUM_VELOCITY_THRESHOLD = 0.3f;
 
 	DirectX::XMFLOAT3 mCenterOfMass;
 
