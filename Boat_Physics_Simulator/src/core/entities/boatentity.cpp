@@ -55,8 +55,6 @@ void BoatEntity::BeginSelf(RenderServer& renderServer)
 
 	mCenterOfMass = CalculateCenterOfMass(mPointClouds);
 	mMass = boatCloud.GetTotalMass() + engineCloud.GetTotalMass();
-
-	// TODO: Calculate y position of equilibrium for the boat
 }
 
 void BoatEntity::UpdateSelf(double deltaTime)
@@ -277,8 +275,6 @@ void BoatEntity::UpdateSelf(double deltaTime)
 			mState = BoatState::DEFAULT;
 			position.y = 0.0f;
 		}
-
-		// NEXT: Change position of model / point cloud so that equilibrium is at y = 0 (with some "root" entity or smth idk)
 
 		transform.SetPosition(position);
 	}
