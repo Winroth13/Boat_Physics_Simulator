@@ -233,9 +233,10 @@ void BoatEntity::UpdateSelf(double deltaTime)
 			*	force acceleration to move towards 0 to prevent
 			*	too much bouncing on the water.
 			*/
-			if (fabsf(liftAcceleration - GRAVITY) < 0.25f)
+			if (fabsf(liftAcceleration - GRAVITY) < 0.3f)
 			{
-				acceleration *= XMVectorSet(0.0f, 0.01f, 0.0f, 0.0f);
+				//acceleration *= XMVectorSet(0.0f, 0.01f, 0.0f, 0.0f);
+				acceleration *= XMVectorSet(1, 0, 1, 1);
 			}
 
 			velocity += acceleration * delta;
