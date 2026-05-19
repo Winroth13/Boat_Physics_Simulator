@@ -55,6 +55,26 @@ void BoatEntity::BeginSelf(RenderServer& renderServer)
 
 	mCenterOfMass = CalculateCenterOfMass(mPointClouds);
 	mMass = boatCloud.GetTotalMass() + engineCloud.GetTotalMass();
+
+    mMomentOfIntertiaMatrix = CalculateMomentOfInertiaMatrix(mPointClouds, mCenterOfMass);
+
+    DirectX::XMVECTOR rightVector = XMVectorSet(1, 0, 0, 0);
+    DirectX::XMVECTOR upVector = XMVectorSet(0, 1, 0, 0);
+    DirectX::XMVECTOR forwardVector = XMVectorSet(0, 0, 1, 0);
+
+    DirectX::XMVECTOR rightMomentOfInertiaV = rightVector * DirectX::XMVectorGetX(DirectX::XMVector3Length(DirectX::XMVector3Transform(rightVector, mMomentOfIntertiaMatrix)));
+    DirectX::XMVECTOR upMomentOfInertiaV = upVector * DirectX::XMVectorGetX(DirectX::XMVector3Length(DirectX::XMVector3Transform(upVector, mMomentOfIntertiaMatrix)));
+    DirectX::XMVECTOR forwardMomentOfInertiaV = forwardVector * DirectX::XMVectorGetX(DirectX::XMVector3Length(DirectX::XMVector3Transform(forwardVector, mMomentOfIntertiaMatrix)));
+
+    DirectX::XMFLOAT3 right;
+    DirectX::XMFLOAT3 up;
+	DirectX::XMFLOAT3 forward;
+
+    DirectX::XMStoreFloat3(&right, rightMomentOfInertiaV);
+    DirectX::XMStoreFloat3(&up, upMomentOfInertiaV);
+    DirectX::XMStoreFloat3(&forward, forwardMomentOfInertiaV);
+
+    int xxx = 0;
 }
 
 void BoatEntity::UpdateSelf(double deltaTime)
@@ -275,7 +295,7 @@ void BoatEntity::UpdateSelf(double deltaTime)
 		position.y = CalculateDampenedBoatY(mDistanceToSurface, mTimeAscending, GAMMA);
 
 		/* Check if we have finished ascending */
-		if (position.y >= -0.05f)
+		if (position.y >= -ASCENDING_END_THRESHOLD)
 		{
 			mState = BoatState::DEFAULT;
 			position.y = 0.0f;

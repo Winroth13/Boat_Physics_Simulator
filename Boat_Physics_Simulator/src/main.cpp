@@ -83,6 +83,7 @@ public:
 		rootEntity.Attach(&boatEntity);
 		rootEntity.transform.SetPosition(0, 0.28f, 0);
 		rootEntity.SetName("Root");
+        boatEntity.SetRootEntity(&rootEntity);
 
 		auto boatModel = std::make_shared<OBJModel>("assets/new_motorboat/motorboat.obj", vShader, true);
 
@@ -164,7 +165,7 @@ public:
 				DirectX::XMVectorScale(cameraEntity.transform.GetForwardDir(), -4)
 			)
 		);
-		cameraEntity.Attach(&rootEntity);
+		cameraEntity.Attach(&boatEntity);
 		camera = &cameraEntity;
 	};
 
@@ -216,6 +217,11 @@ public:
 
 				cameraRotated = true;
 			}
+			
+            //DirectX::XMFLOAT3 angles = camera->transform.GetAngles3f();
+            //angles.x = 0.0f;
+            //camera->transform.SetAngles(angles);
+            //camera->transform.RotateX(-boat->transform.GetAngles3f().x);
 
 			if (cameraRotated)
 			{

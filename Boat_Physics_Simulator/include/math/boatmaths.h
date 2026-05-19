@@ -36,3 +36,8 @@ void SplitPointCloud(
 float CalculateFrontArea(PointCloud& pointCloud);
 
 float CalculateDampenedBoatY(float distanceToSurface, float time, float gamma);
+
+DirectX::XMMATRIX CalculateMomentOfInertiaMatrix(
+    const std::vector<PointCloud>& pointClouds,
+    const DirectX::XMFLOAT3& centerOfMass
+);
