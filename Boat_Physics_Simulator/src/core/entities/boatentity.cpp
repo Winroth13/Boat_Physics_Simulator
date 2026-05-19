@@ -35,7 +35,7 @@ void BoatEntity::BeginSelf(RenderServer& renderServer)
 	{
 		Logger::Error("Failed to create area calculator");
 		throw std::runtime_error("");
-    }
+	}
 
 	auto vShader = std::make_shared<VertexShader>("resources/VertexShader.cso");
 	mSphereModel = std::make_unique<OBJModel>("assets/pointclouds/point_sphere.obj", vShader);
@@ -56,7 +56,7 @@ void BoatEntity::BeginSelf(RenderServer& renderServer)
 	mCenterOfMass = CalculateCenterOfMass(mPointClouds);
 	mMass = boatCloud.GetTotalMass() + engineCloud.GetTotalMass();
 
-    // TODO: Calculate y position of equilibrium for the boat
+	// TODO: Calculate y position of equilibrium for the boat
 }
 
 void BoatEntity::UpdateSelf(double deltaTime)
@@ -75,14 +75,14 @@ void BoatEntity::UpdateSelf(double deltaTime)
 	Input(delta);
 
 #if 1
-    XMVECTOR velocity = XMLoadFloat3(&mVelocity);
-    XMVECTOR acceleration = XMLoadFloat3(&mAcceleration);
+	XMVECTOR velocity = XMLoadFloat3(&mVelocity);
+	XMVECTOR acceleration = XMLoadFloat3(&mAcceleration);
 
 	/* Calculate Area */
 	mFrontAreaUnderWater = mAreaCalculator.CalculateArea(
 		mBoatModelEntity->GetModel(),
 		transform,
-		{0, DirectX::XM_PI, 0}
+		{ 0, DirectX::XM_PI, 0 }
 	);
 
 	mBottomAreaUnderWater = mAreaCalculator.CalculateArea(
@@ -93,19 +93,19 @@ void BoatEntity::UpdateSelf(double deltaTime)
 
 	/* Calculate Forward Thrust Force */
 	{
-        XMVECTOR forward = transform.GetForwardDir();
-        float velocityForwardScalar = XMVectorGetX(XMVector3Dot(velocity, forward));
+		XMVECTOR forward = transform.GetForwardDir();
+		float velocityForwardScalar = XMVectorGetX(XMVector3Dot(velocity, forward));
 
-        float numerator = (mForwardUserInput * mTotalEfficiency * mEnginePower);
-        float denominator = (mHullEfficiency * velocityForwardScalar * (1 - mWakeFactor));
-        mThrustForce = numerator / denominator;
+		float numerator = (mForwardUserInput * mTotalEfficiency * mEnginePower);
+		float denominator = (mHullEfficiency * velocityForwardScalar * (1 - mWakeFactor));
+		mThrustForce = numerator / denominator;
 	}
 
-    /* Calculate Angular Velocity */
+	/* Calculate Angular Velocity */
 	{
-        float turnAngle = GetTurnAngle();
+		float turnAngle = GetTurnAngle();
 
-        mMotorHingeEntity->transform.SetYaw(-turnAngle);
+		mMotorHingeEntity->transform.SetYaw(-turnAngle);
 
 		XMFLOAT3 propellerGlobalPosition = mPropellerEntity->GetGlobalPosition();
 		propellerGlobalPosition.y = 0.0f;
@@ -117,16 +117,16 @@ void BoatEntity::UpdateSelf(double deltaTime)
 		XMVECTOR center = XMVector3Transform(centerOfMass, transform.GetMatrix());
 		float distanceToCenter = XMVectorGetX(XMVector3Length(propellerPosition - center));
 
-        float inertia = mThrustForce * sinf(turnAngle) * distanceToCenter;
-        float momentOfInertia = CalculateMomentOfInertia(GetBoatLength(), GetBoatWidth(), mMass);
+		float inertia = mThrustForce * sinf(turnAngle) * distanceToCenter;
+		float momentOfInertia = CalculateMomentOfInertia(GetBoatLength(), GetBoatWidth(), mMass);
 
-        float angularAcceleration = inertia / momentOfInertia;
-        mAngularVelocity = angularAcceleration * delta;
+		float angularAcceleration = inertia / momentOfInertia;
+		mAngularVelocity = angularAcceleration * delta;
 
-        constexpr float A = 500.0f;
-        constexpr float k = 6.0f;
-        float waterInertia = A * (expf(k * mAngularVelocity) - 1);
-        float angularDeceleration = waterInertia / momentOfInertia;
+		constexpr float A = 500.0f;
+		constexpr float k = 6.0f;
+		float waterInertia = A * (expf(k * mAngularVelocity) - 1);
+		float angularDeceleration = waterInertia / momentOfInertia;
 
 		mAngularVelocity -= angularDeceleration * delta;
 
@@ -196,85 +196,84 @@ void BoatEntity::UpdateSelf(double deltaTime)
 		SplitPointCloud(GetPointCloud(PointCloudType::ENGINE), transformMatrix, 0.0f, above, below);
 		mVolumeUnderWater += below.GetVolume();
 	}
-    
+
 	switch (mState)
-    {
-		case BoatState::DEFAULT:
+	{
+	case BoatState::DEFAULT:
+	{
+		/* Calculate upwards water drag force */
 		{
-			/* Calculate upwards water drag force */
-			{
-				float velocityUpScalar = fabsf(XMVectorGetY(velocity));
+			float velocityUpScalar = fabsf(XMVectorGetY(velocity));
 
-				mReynoldsNumber = CalculateReynolds(
-					WATER_DENSITY,
-					GetBoatHeight(),
-					velocityUpScalar,
-					mWaterViscosity
-				);
+			mReynoldsNumber = CalculateReynolds(
+				WATER_DENSITY,
+				GetBoatHeight(),
+				velocityUpScalar,
+				mWaterViscosity
+			);
 
-				float cf = CalculateCf(mReynoldsNumber);
-				float cr = 0.0f; // We don't care about dynamic waves
-				mCh = cf + cr;
+			float cf = CalculateCf(mReynoldsNumber);
+			float cr = 0.0f; // We don't care about dynamic waves
+			mCh = cf + cr;
 
-				mWaterDragForce.y = CalculateWaterDragForce(
-					WATER_DENSITY,
-					mBottomAreaUnderWater,
-					mCh,
-					velocityUpScalar
-				);
-			}
-
-
-			float liftAcceleration = WATER_DENSITY * mVolumeUnderWater / mMass * GRAVITY;
-			acceleration += XMVectorSet(0, liftAcceleration + mWaterDragForce.y / mMass - GRAVITY, 0, 0);
-
-			/* 
-			*	When Lift Acceleration is almost equal to Gravity, 
-			*	force acceleration to move towards 0 to prevent
-			*	too much bouncing on the water.
-			*/
-			if (fabsf(liftAcceleration - GRAVITY) < 0.3f)
-			{
-				//acceleration *= XMVectorSet(0.0f, 0.01f, 0.0f, 0.0f);
-				acceleration *= XMVectorSet(1, 0, 1, 1);
-			}
-
-			velocity += acceleration * delta;
-
-			transform.MoveY(XMVectorGetY(velocity) * delta);
-
-			/* Check if we should start ascending */
-			if (mVelocity.y < 0.0f && XMVectorGetY(velocity) >= 0.0f)
-			{
-				mState = BoatState::ASCENDING;
-				mDistanceToSurface = transform.GetPosition3f().y;
-				mTimeAscending = 0.0f;
-			}
+			mWaterDragForce.y = CalculateWaterDragForce(
+				WATER_DENSITY,
+				mBottomAreaUnderWater,
+				mCh,
+				velocityUpScalar
+			);
 		}
-		break;
 
-		case BoatState::ASCENDING:
+		float liftAcceleration = WATER_DENSITY * mVolumeUnderWater / mMass * GRAVITY;
+		acceleration += XMVectorSet(0, liftAcceleration + mWaterDragForce.y / mMass - GRAVITY, 0, 0);
+
+		/*
+		*	When Lift Acceleration is almost equal to Gravity,
+		*	force acceleration to move towards 0 to prevent
+		*	too much bouncing on the water.
+		*/
+		if (fabsf(liftAcceleration - GRAVITY) < 0.3f)
 		{
-			mTimeAscending += delta;
-
+			//acceleration *= XMVectorSet(0.0f, 0.01f, 0.0f, 0.0f);
 			acceleration *= XMVectorSet(1, 0, 1, 1);
-			velocity += acceleration * delta;
-
-			XMFLOAT3 position = transform.GetPosition3f();
-			position.y = CalculateDampenedBoatY(mDistanceToSurface, mTimeAscending, GAMMA);
-
-			/* Check if we have finished ascending */
-			if (position.y >= -0.05f)
-			{
-				mState = BoatState::DEFAULT;
-				position.y = 0.0f;
-			}
-
-            // NEXT: Change position of model / point cloud so that equilibrium is at y = 0 (with some "root" entity or smth idk)
-
-			transform.SetPosition(position);
 		}
-		break;
+
+		velocity += acceleration * delta;
+
+		transform.MoveY(XMVectorGetY(velocity) * delta);
+
+		/* Check if we should start ascending */
+		if (mVelocity.y < 0.0f && XMVectorGetY(velocity) >= 0.0f)
+		{
+			mState = BoatState::ASCENDING;
+			mDistanceToSurface = transform.GetPosition3f().y;
+			mTimeAscending = 0.0f;
+		}
+	}
+	break;
+
+	case BoatState::ASCENDING:
+	{
+		mTimeAscending += delta;
+
+		acceleration *= XMVectorSet(1, 0, 1, 1);
+		velocity += acceleration * delta;
+
+		XMFLOAT3 position = transform.GetPosition3f();
+		position.y = CalculateDampenedBoatY(mDistanceToSurface, mTimeAscending, GAMMA);
+
+		/* Check if we have finished ascending */
+		if (position.y >= -0.05f)
+		{
+			mState = BoatState::DEFAULT;
+			position.y = 0.0f;
+		}
+
+		// NEXT: Change position of model / point cloud so that equilibrium is at y = 0 (with some "root" entity or smth idk)
+
+		transform.SetPosition(position);
+	}
+	break;
 	}
 
 	DirectX::XMStoreFloat3(&mVelocity, velocity);
@@ -397,10 +396,10 @@ void BoatEntity::Input(float delta) {
 
 void BoatEntity::RenderImguiSelf()
 {
-    if (ImGui::Button("Start Game")) {
-        mPause = false;
-        mGameEntity->SetVisible(true);
-    }
+	if (ImGui::Button("Start Game")) {
+		mPause = false;
+		mGameEntity->SetVisible(true);
+	}
 
 	ImGui::Checkbox("Pause", &mPause);
 
