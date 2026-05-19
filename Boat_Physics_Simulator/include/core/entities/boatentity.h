@@ -121,10 +121,10 @@ private:
 
     DirectX::XMFLOAT3 mVelocity = { 0, 0, 10 };
     float forwardAcceleration = 0.0f;
-
     DirectX::XMFLOAT3 mAcceleration = { 0, 0, 0 };
 
-    float mAngularVelocity = 0.0f;
+    DirectX::XMFLOAT3 mAngularVelocity = { 0, 0, 0 };
+    DirectX::XMFLOAT3 mAngularAcceleration = { 0, 0, 0 };
 
     /* Forces */
     float mThrustForce = 0.0f;
