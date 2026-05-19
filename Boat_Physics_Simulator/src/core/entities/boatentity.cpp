@@ -140,12 +140,13 @@ void BoatEntity::UpdateSelf(double deltaTime)
 	/* Calculate forward water drag force */
 	{
 		XMVECTOR forward = transform.GetForwardDir();
+		float velocityTotalScalar = XMVectorGetX(XMVector3Length(velocity));
 		float velocityForwardScalar = XMVectorGetX(XMVector3Dot(velocity, forward));
 
 		mReynoldsNumber = CalculateReynolds(
 			WATER_DENSITY,
 			GetBoatLength(),
-			velocityForwardScalar,
+			velocityTotalScalar,
 			mWaterViscosity
 		);
 
@@ -203,12 +204,13 @@ void BoatEntity::UpdateSelf(double deltaTime)
 	{
 		/* Calculate upwards water drag force */
 		{
+			float velocityTotalScalar = XMVectorGetX(XMVector3Length(velocity));
 			float velocityUpScalar = fabsf(XMVectorGetY(velocity));
 
 			mReynoldsNumber = CalculateReynolds(
 				WATER_DENSITY,
 				GetBoatHeight(),
-				velocityUpScalar,
+				velocityTotalScalar,
 				mWaterViscosity
 			);
 
