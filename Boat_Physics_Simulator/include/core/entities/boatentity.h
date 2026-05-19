@@ -115,7 +115,7 @@ private:
 
 	float mEnginePower = 20000;
 
-	DirectX::XMFLOAT3 mVelocity = { 0, 0, 20 };
+	DirectX::XMFLOAT3 mVelocity = { 0, 0, 10 };
 	float forwardAcceleration = 0.0f;
 
 	DirectX::XMFLOAT3 mAcceleration = { 0, 0, 0 };

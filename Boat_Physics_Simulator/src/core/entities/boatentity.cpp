@@ -89,11 +89,11 @@ void BoatEntity::UpdateSelf(double deltaTime)
 		{ -DirectX::XM_PIDIV2, 0, 0 }
 	);
 
+	XMVECTOR forward = transform.GetForwardDir();
+	float velocityForwardScalar = XMVectorGetX(XMVector3Dot(velocity, forward));
+
 	/* Calculate Forward Thrust Force */
 	{
-		XMVECTOR forward = transform.GetForwardDir();
-		float velocityForwardScalar = XMVectorGetX(XMVector3Dot(velocity, forward));
-
 		if (mForwardUserInput > 0.0f && velocityForwardScalar < MIN_VELOCITY) // If you start the boat when standing still
 		{
 			velocityForwardScalar = MIN_VELOCITY;
@@ -224,9 +224,14 @@ void BoatEntity::UpdateSelf(double deltaTime)
 				velocityUpScalar
 			);
 		}
+		/* The hull works like a wing on the water */
+		float wingForce = 0.5f * WATER_DENSITY * mFrontAreaUnderWater * mCh * velocityForwardScalar * velocityForwardScalar;
+		float wingAcceleration = wingForce / mMass;
 
+		/* Water displacement crates an upwards force */
 		float liftAcceleration = WATER_DENSITY * mVolumeUnderWater / mMass * GRAVITY;
-		acceleration += XMVectorSet(0, liftAcceleration + mWaterDragForce.y / mMass - GRAVITY, 0, 0);
+
+		acceleration += XMVectorSet(0, wingAcceleration + liftAcceleration + mWaterDragForce.y / mMass - GRAVITY, 0, 0);
 
 		velocity += acceleration * delta;
 
@@ -239,7 +244,7 @@ void BoatEntity::UpdateSelf(double deltaTime)
 		*	since it's impossible to find the perfect equilibrium.
 		*/
 		if (
-			fabsf(liftAcceleration - GRAVITY) < EQUILIBRIUM_ACCELERATION_THRESHOLD &&
+			fabsf(wingAcceleration + liftAcceleration - GRAVITY) < EQUILIBRIUM_ACCELERATION_THRESHOLD &&
 			fabsf(XMVectorGetY(velocity)) < EQUILIBRIUM_VELOCITY_THRESHOLD
 			)
 		{
@@ -367,7 +372,8 @@ static inline bool IsKeyDown(int vKey)
 	return GetAsyncKeyState(vKey) & 0x8000;
 }
 
-void BoatEntity::Input(float delta) {
+void BoatEntity::Input(float delta)
+{
 	if (IsKeyDown('W'))
 	{
 		mForwardInputTimer += delta;
@@ -401,7 +407,8 @@ void BoatEntity::Input(float delta) {
 
 void BoatEntity::RenderImguiSelf()
 {
-	if (ImGui::Button("Start Game")) {
+	if (ImGui::Button("Start Game"))
+	{
 		mPause = false;
 		mGameEntity->SetVisible(true);
 	}
