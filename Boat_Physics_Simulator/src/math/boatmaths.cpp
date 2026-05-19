@@ -81,6 +81,44 @@ XMFLOAT3 CalculateCenterOfMass(std::vector<PointCloud>& pointClouds)
 	return center;
 }
 
+XMFLOAT3 CalculateCenterOfVolume(std::vector<PointCloud>& pointClouds)
+{
+	float totalVolume = 0.0f;
+	XMFLOAT3 totalPoint = { 0,0,0 };
+
+	for (auto& pointCloud : pointClouds)
+	{
+		auto& points = pointCloud.GetPoints();
+		if (points.size() == 0)
+			continue;
+
+		XMFLOAT3 sum = { 0.0f, 0.0f, 0.0f };
+		for (auto& point : points)
+		{
+			sum.x += point.position.x;
+			sum.y += point.position.y;
+			sum.z += point.position.z;
+		}
+		sum.x /= points.size();
+		sum.y /= points.size();
+		sum.z /= points.size();
+
+		totalVolume += pointCloud.GetVolume();
+		totalPoint.x += sum.x * pointCloud.GetVolume();
+		totalPoint.y += sum.y * pointCloud.GetVolume();
+		totalPoint.z += sum.z * pointCloud.GetVolume();
+	}
+
+	XMFLOAT3 center = { 0,0,0 };
+	if (totalVolume >= 1e-5) {
+		center.x = totalPoint.x / totalVolume;
+		center.y = totalPoint.y / totalVolume;
+		center.z = totalPoint.z / totalVolume;
+	}
+
+	return center;
+}
+
 void SplitPointCloud(
 	const PointCloud& inPointCloud,
 	XMMATRIX transform,

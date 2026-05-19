@@ -25,6 +25,8 @@ float CalculateMomentOfInertia(float length, float width, float mass);
 
 DirectX::XMFLOAT3 CalculateCenterOfMass(std::vector<PointCloud>& pointClouds);
 
+DirectX::XMFLOAT3 CalculateCenterOfVolume(std::vector<PointCloud>& pointClouds);
+
 void SplitPointCloud(
     const PointCloud& inPointCloud,
     DirectX::XMMATRIX transform,

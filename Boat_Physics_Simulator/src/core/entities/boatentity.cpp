@@ -44,7 +44,7 @@ void BoatEntity::BeginSelf(RenderServer& renderServer)
 
 	PointCloud boatCloud("assets/pointclouds/new/point_cloud_boat.obj", 500);
 	PointCloud airCloud("assets/pointclouds/new/point_cloud_air.obj", 0.125f, 1.225f);
-	PointCloud engineCloud("assets/pointclouds/new/point_cloud_engine.obj", 100);
+	PointCloud engineCloud("assets/pointclouds/new/point_cloud_engine.obj", 300);
 
 	boatCloud.SetPointRadius(0.025f);
 	engineCloud.SetPointRadius(0.025f);
@@ -254,7 +254,7 @@ void BoatEntity::UpdateSelf(double deltaTime)
 		{
 			XMFLOAT3 propellerGlobalPosition = mPropellerEntity->GetGlobalPosition();
 			XMVECTOR propellerPosition = XMLoadFloat3(&propellerGlobalPosition);
-			float propellerToCentre = XMVectorGetX(XMVector3Length(propellerPosition - center));
+			float propellerToCenter = XMVectorGetX(XMVector3Length(propellerPosition - center));
 
 			XMVECTOR torqueUnitVector = -XMVector3Normalize(
 				XMVector3Cross(propellerPosition - center, right)
@@ -263,7 +263,7 @@ void BoatEntity::UpdateSelf(double deltaTime)
 			XMVECTOR forwardForceVector = mRootEntity->transform.GetForwardDir() * mThrustForce;
 			float torqueForce = XMVectorGetX(XMVector3Dot(forwardForceVector, torqueUnitVector));
 
-			engineTorque = propellerToCentre * torqueForce;
+			engineTorque = propellerToCenter * torqueForce;
 		}
 
 		/* Gravitational torque */
@@ -280,7 +280,7 @@ void BoatEntity::UpdateSelf(double deltaTime)
 			XMVECTOR massCenterAbove = XMLoadFloat3(&massCenterAbovef);
 			massCenterAbove = XMVector3Transform(massCenterAbove, mRootEntity->GetGlobalTransform());
 
-			float massAboveToCentre = XMVectorGetX(XMVector3Length(massCenterAbove - center));
+			float massAboveToCenter = XMVectorGetX(XMVector3Length(massCenterAbove - center));
 
 			XMVECTOR torqueUnitVector = -XMVector3Normalize(
 				XMVector3Cross(massCenterAbove - center, right)
@@ -290,12 +290,31 @@ void BoatEntity::UpdateSelf(double deltaTime)
 			XMVECTOR gravitationalForce = XMVectorSet(0, -GRAVITY, 0, 0) * fallingMass;
 			float torqueForce = XMVectorGetX(XMVector3Dot(gravitationalForce, torqueUnitVector));
 
-			gravitationalTorque = massAboveToCentre * torqueForce;
+			gravitationalTorque = massAboveToCenter * torqueForce;
 		}
 
 		// Mass under water ascending
-		//float waterTorque;
+		float waterTorque;
 		{
+			XMFLOAT3 volumeCenterBelowf = CalculateCenterOfVolume(belowWaterPointClouds);
+			XMVECTOR volumeCenterBelow = XMLoadFloat3(&volumeCenterBelowf);
+			volumeCenterBelow = XMVector3Transform(volumeCenterBelow, mRootEntity->GetGlobalTransform());
+
+			float volumeBelowToCenter = XMVectorGetX(XMVector3Length(volumeCenterBelow - center));
+
+			XMVECTOR torqueUnitVector = -XMVector3Normalize(
+				XMVector3Cross(volumeCenterBelow - center, right)
+			);
+
+			float volumeBelow =
+				belowWaterPointClouds[0].GetVolume() +
+				belowWaterPointClouds[1].GetVolume() +
+				belowWaterPointClouds[2].GetVolume();
+
+			XMVECTOR waterForce = XMVectorSet(0, 1, 0, 0) * volumeBelow * WATER_DENSITY * GRAVITY;
+			float torqueForce = XMVectorGetX(XMVector3Dot(waterForce, torqueUnitVector));
+
+			waterTorque = volumeBelowToCenter * torqueForce;
 		}
 
 		/* Water torque dampening */
@@ -307,7 +326,7 @@ void BoatEntity::UpdateSelf(double deltaTime)
 		);
 		XMVECTOR momentOfIntertiaV = localRight * momentOfIntertiaLength;
 
-		mAngularAcceleration.x = (engineTorque + gravitationalTorque) / XMVectorGetX(XMVector3Length(momentOfIntertiaV));
+		mAngularAcceleration.x = (engineTorque + gravitationalTorque + waterTorque) / XMVectorGetX(XMVector3Length(momentOfIntertiaV));
 		mAngularVelocity.x += mAngularAcceleration.x * delta;
 	}
 
@@ -357,7 +376,11 @@ void BoatEntity::UpdateSelf(double deltaTime)
 		transform.MoveY(XMVectorGetY(velocity) * delta);
 
 		/* Check if we should start ascending */
-		if (mVelocity.y < 0.0f && XMVectorGetY(velocity) >= 0.0f)
+		if (
+			mVelocity.y < 0.0f &&
+			XMVectorGetY(velocity) >= 0.0f &&
+			transform.GetPosition3f().y < -ASCENDING_END_THRESHOLD
+			)
 		{
 			mState = BoatState::ASCENDING;
 			mDistanceToSurface = transform.GetPosition3f().y;
@@ -525,6 +548,15 @@ void BoatEntity::RenderImguiSelf()
 	ImGui::TextColored(ImVec4(0, 1, 0, 1), "Reynolds: %.2f", mReynoldsNumber);
 	ImGui::TextColored(ImVec4(0, 1, 0, 1), "Water Viscosity %f pas", mWaterViscosity);
 	ImGui::TextColored(ImVec4(0, 1, 0, 1), "CH %f", mCh);
+
+	XMFLOAT3 rootAngles = mRootEntity->transform.GetAngles3f();
+	float rootPitchDeg = DirectX::XMConvertToDegrees(rootAngles.x);
+
+	if (ImGui::DragFloat("Pitch", &rootPitchDeg, 0.1f, 0.0f, 90.0f, "%.1f deg"))
+	{
+		rootAngles.x = XMConvertToRadians(rootPitchDeg);
+		mRootEntity->transform.SetAngles(rootAngles);
+	}
 
 	if (ImGui::TreeNodeEx("Input", TREE_NODE_FLAGS))
 	{
