@@ -227,18 +227,24 @@ void BoatEntity::UpdateSelf(double deltaTime)
 		float liftAcceleration = WATER_DENSITY * mVolumeUnderWater / mMass * GRAVITY;
 		acceleration += XMVectorSet(0, liftAcceleration + mWaterDragForce.y / mMass - GRAVITY, 0, 0);
 
+		velocity += acceleration * delta;
+
 		/*
 		*	When Lift Acceleration is almost equal to Gravity,
-		*	force acceleration to move towards 0 to prevent
+		*	force acceleration and velocity to 0 to prevent
 		*	too much bouncing on the water.
+		*   
+		*   It's probably the balls' fault that we have to do this
+		*	since it's impossible to find the perfect equilibrium.
 		*/
-		if (fabsf(liftAcceleration - GRAVITY) < 0.3f)
+		if (
+			fabsf(liftAcceleration - GRAVITY) < EQUILIBRIUM_ACCELERATION_THRESHOLD &&
+			fabsf(XMVectorGetY(velocity)) < EQUILIBRIUM_VELOCITY_THRESHOLD
+		)
 		{
-			//acceleration *= XMVectorSet(0.0f, 0.01f, 0.0f, 0.0f);
 			acceleration *= XMVectorSet(1, 0, 1, 1);
+			velocity *= XMVectorSet(1, 0, 1, 1);
 		}
-
-		velocity += acceleration * delta;
 
 		transform.MoveY(XMVectorGetY(velocity) * delta);
 
