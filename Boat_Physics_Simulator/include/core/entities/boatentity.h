@@ -11,7 +11,7 @@
 #include <memory>
 #include <DirectXMath.h>
 
-#define USE_TITLE_SCREEN false
+#define USE_TITLE_SCREEN true
 
 class BoatEntity : public Entity
 {
@@ -25,6 +25,8 @@ public:
 	void SetGameEntity(Entity* e) { mGameEntity = e; }
 	void SetRootEntity(Entity* e) { mRootEntity = e; }
 	void SetCameraEntity(CameraEntity* e) { mCameraEntity = e; }
+
+	void Unpause() { mPause = false; }
 
 protected:
 	virtual void BeginSelf(RenderServer& renderServer) override;
@@ -142,7 +144,7 @@ private:
 	float mReynoldsNumber = 0.0f;
 	float mCh = 0.0f;
 
-	bool mPause = USE_TITLE_SCREEN; // <-- SET TRUE FOR TITLE SCREEN :)
+	bool mPause = true;
 	bool mUncapSimulationSpeed = false;
 
 	float mVolumeUnderWater = 0.0f;

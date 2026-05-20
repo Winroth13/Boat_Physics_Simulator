@@ -39,13 +39,18 @@ extern "C" {
 class TestApp : public App
 {
 public:
+	float time;
+
 	Entity* inspectorEntity = nullptr;
 
 	Entity* camera;
 	Entity* ocean;
-	Entity* boat;
+	BoatEntity* boat;
+	Entity* mattias;
 
 	POINT previousMousePos;
+
+	bool inTitleScreen = true;
 
 	void Initialize() override
 	{
@@ -53,15 +58,6 @@ public:
 
 		auto& gameEntity = mScene->CreateEntity<Entity>();
 		gameEntity.SetName("Game");
-		gameEntity.SetVisible(!USE_TITLE_SCREEN); // <-- SET FALSE FOR TITLE SCREEN
-
-		auto mattiasModel = std::make_shared<OBJModel>("assets/mattias/mattias.obj", vShader, false);
-
-		auto& mattiasModelEntity = mScene->CreateEntity<ModelEntity>(mattiasModel);
-		mattiasModelEntity.SetName("Title Screen");
-		mattiasModelEntity.transform.SetPosition(0, 9.95f, -3.1f);
-		mattiasModelEntity.transform.SetPitch(DirectX::XMConvertToRadians(-72));
-		mattiasModelEntity.transform.SetScale(1.68f, 1.0f, 1.3f);
 
 		auto& enviromentEntity = mScene->CreateEntity<EnviromentEntity>();
 		int ambientDivisor = 1;
@@ -73,11 +69,12 @@ public:
 		sunEntity.SetVisible(true);
 
 		auto& boatEntity = mScene->CreateEntity<BoatEntity>();
-		boatEntity.transform.SetPosition(0, 0.0f, 0);
+		boatEntity.transform.SetPosition(0, 0.5f, 0);
 		inspectorEntity = &boatEntity;
 		boat = &boatEntity;
 		boatEntity.Attach(&gameEntity);
 		boatEntity.SetGameEntity(&gameEntity);
+		boatEntity.SetVisible(false);
 
 		auto& rootEntity = mScene->CreateEntity<Entity>();
 		rootEntity.Attach(&boatEntity);
@@ -166,9 +163,23 @@ public:
 				DirectX::XMVectorScale(cameraEntity.transform.GetForwardDir(), -4)
 			)
 		);
-		cameraEntity.Attach(&boatEntity);
 		camera = &cameraEntity;
         boatEntity.SetCameraEntity(&cameraEntity);
+
+		auto mattiasModel = std::make_shared<OBJModel>("assets/mattias/mattias.obj", vShader, false);
+
+		auto& mattiasModelEntity = mScene->CreateEntity<ModelEntity>(mattiasModel);
+		mattiasModelEntity.SetName("Title Screen");
+		mattiasModelEntity.transform.SetPosition(0, 0.1f, 1.0f);
+		mattiasModelEntity.transform.SetPitch(DirectX::XMConvertToRadians(270));
+		mattiasModelEntity.transform.SetScale(1.68f, 1.0f, 1.3f);
+		mattiasModelEntity.Attach(&cameraEntity);
+		mattias = &mattiasModelEntity;
+
+		if (!USE_TITLE_SCREEN)
+		{
+			StartGame();
+		}
 	};
 
 	void Shutdown() override
@@ -177,87 +188,124 @@ public:
 
 	void Update(double delta) override
 	{
+		time += static_cast<float>(delta);
+
 		/* Only handle input if window is focused */
 		if (GetFocus() != NULL)
 		{
-			/* Camera Movement	*/
-			constexpr float TURN_SPEED = 2.6f;
-
-			POINT newMousePos;
-
-			GetCursorPos(&newMousePos);
-
-			bool cameraRotated = false;
-			/* Rotation */
-			if (GetAsyncKeyState(VK_LEFT) & 0x8000)
+			if (inTitleScreen)
 			{
-				camera->transform.RotateY(TURN_SPEED * (float)delta);
-				cameraRotated = true;
+				if (GetAsyncKeyState(VK_SPACE) & 0x8000)
+				{
+					StartGame();
+				}
 			}
-			if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
+			else
 			{
-				camera->transform.RotateY(-TURN_SPEED * (float)delta);
-				cameraRotated = true;
+				/* Camera Movement	*/
+				constexpr float TURN_SPEED = 2.6f;
+
+				POINT newMousePos;
+
+				GetCursorPos(&newMousePos);
+
+				bool cameraRotated = false;
+				/* Rotation */
+				if (GetAsyncKeyState(VK_LEFT) & 0x8000)
+				{
+					camera->transform.RotateY(TURN_SPEED * (float)delta);
+					cameraRotated = true;
+				}
+				if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
+				{
+					camera->transform.RotateY(-TURN_SPEED * (float)delta);
+					cameraRotated = true;
+				}
+				if (GetAsyncKeyState(VK_UP) & 0x8000)
+				{
+					camera->transform.RotateX(TURN_SPEED * (float)delta);
+					cameraRotated = true;
+				}
+				if (GetAsyncKeyState(VK_DOWN) & 0x8000)
+				{
+					camera->transform.RotateX(-TURN_SPEED * (float)delta);
+					cameraRotated = true;
+				}
+				if (GetAsyncKeyState(MK_RBUTTON) & 0x8000)
+				{
+					float dx = 0.25f * DirectX::XMConvertToRadians(static_cast<float>(newMousePos.x - previousMousePos.x));
+					float dy = 0.25f * DirectX::XMConvertToRadians(static_cast<float>(newMousePos.y - previousMousePos.y));
+
+					camera->transform.RotateX(TURN_SPEED * dy);
+					camera->transform.RotateY(TURN_SPEED * dx);
+
+					cameraRotated = true;
+				}
+
+				//DirectX::XMFLOAT3 angles = camera->transform.GetAngles3f();
+				//angles.x = 0.0f;
+				//camera->transform.SetAngles(angles);
+				//camera->transform.RotateX(-boat->transform.GetAngles3f().x);
+
+				if (cameraRotated)
+				{
+					camera->transform.SetPosition(
+						DirectX::XMVectorAdd(
+							DirectX::XMVECTOR{ 0, 1, 0 },
+							DirectX::XMVectorScale(camera->transform.GetForwardDir(), -4)
+						)
+					);
+				}
+
+				/* Toggle Gizmo Operation */
+				if (GetAsyncKeyState('T') & 0x8000)
+					mGizmoOperation = ImGuizmo::TRANSLATE;
+				if (GetAsyncKeyState('R') & 0x8000)
+					mGizmoOperation = ImGuizmo::SCALE;
+
+				if (GetAsyncKeyState(VK_ESCAPE) & 0x8000)
+				{
+					inspectorEntity = nullptr;
+				}
+
+				previousMousePos = newMousePos;
 			}
-			if (GetAsyncKeyState(VK_UP) & 0x8000)
-			{
-				camera->transform.RotateX(TURN_SPEED * (float)delta);
-				cameraRotated = true;
-			}
-			if (GetAsyncKeyState(VK_DOWN) & 0x8000)
-			{
-				camera->transform.RotateX(-TURN_SPEED * (float)delta);
-				cameraRotated = true;
-			}
-			if (GetAsyncKeyState(MK_RBUTTON) & 0x8000)
-			{
-				float dx = 0.25f * DirectX::XMConvertToRadians(static_cast<float>(newMousePos.x - previousMousePos.x));
-				float dy = 0.25f * DirectX::XMConvertToRadians(static_cast<float>(newMousePos.y - previousMousePos.y));
-
-				camera->transform.RotateX(TURN_SPEED * dy);
-				camera->transform.RotateY(TURN_SPEED * dx);
-
-				cameraRotated = true;
-			}
-
-			//DirectX::XMFLOAT3 angles = camera->transform.GetAngles3f();
-			//angles.x = 0.0f;
-			//camera->transform.SetAngles(angles);
-			//camera->transform.RotateX(-boat->transform.GetAngles3f().x);
-
-			if (cameraRotated)
-			{
-				camera->transform.SetPosition(
-					DirectX::XMVectorAdd(
-						DirectX::XMVECTOR{ 0, 1, 0 },
-						DirectX::XMVectorScale(camera->transform.GetForwardDir(), -4)
-					)
-				);
-			}
-
-			/* Toggle Gizmo Operation */
-			if (GetAsyncKeyState('T') & 0x8000)
-				mGizmoOperation = ImGuizmo::TRANSLATE;
-			if (GetAsyncKeyState('R') & 0x8000)
-				mGizmoOperation = ImGuizmo::SCALE;
-
-			if (GetAsyncKeyState(VK_ESCAPE) & 0x8000)
-			{
-				inspectorEntity = nullptr;
-			}
-
-			previousMousePos = newMousePos;
 		}
 
 		/* Make water follow the boat */
 		DirectX::XMFLOAT3 boatPos = boat->transform.GetPosition3f();
 		DirectX::XMFLOAT3 oceanPos = ocean->transform.GetPosition3f();
 		ocean->transform.SetPosition(boatPos.x, oceanPos.y, boatPos.z);
+
+		/* Zoom mattias menu */
+		if (inTitleScreen)
+		{
+			constexpr float AMPLITUDE = 0.0001f;
+			mattias->transform.MoveZ(sinf(time) * AMPLITUDE);
+			mattias->transform.MoveY(cosf(time) * AMPLITUDE * 0.5);
+		}
+		else
+		{
+			mattias->transform.MoveY(4.0 * delta);
+			mattias->transform.MoveZ(1.0 * delta);
+			if (mattias->transform.GetPosition3f().y > 2)
+			{
+				mattias->SetVisible(false);
+			}
+		}
 	};
 
 	void Render(RenderServer& renderServer) override
 	{
 	};
+
+	void StartGame()
+	{
+		camera->Attach(boat);
+		boat->SetVisible(true);
+		boat->Unpause();
+		inTitleScreen = false;
+	}
 
 	void ImguiRender(RenderServer& renderServer) override
 	{
@@ -373,7 +421,7 @@ public:
 			ImGui::End();
 		}
 
-		if (mShowInspector)
+		if (mShowInspector && !inTitleScreen)
 		{
 			ImGui::Begin("Inspector");
 			if (inspectorEntity != nullptr)
