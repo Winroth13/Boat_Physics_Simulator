@@ -574,7 +574,7 @@ void BoatEntity::RenderImguiSelf()
 		ImGui::DragFloat("Wake Factor", &mWakeFactor, 0.001f, 0, 0.99f);
 		DragPercentage("Total Efficiency", mTotalEfficiency);
 		DragPercentage("Hull Efficiency", mHullEfficiency);
-		ImGui::DragFloat("Engine Power", &mEnginePower, 1, 0, FLT_MAX, "%.2f w");
+		ImGui::DragFloat("Engine Power", &mEnginePower, 50, 0, FLT_MAX, "%.2f w");
 
 		ImGui::TreePop();
 	}
