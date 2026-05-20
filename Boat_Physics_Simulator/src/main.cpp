@@ -54,6 +54,18 @@ public:
 
 	void Initialize() override
 	{
+		auto skyboxCubemap = std::make_shared<CubemapTexture>(
+			std::array<std::string, 6>
+		{
+			"assets/skybox/day/day_px.png",
+				"assets/skybox/day/day_nx.png",
+				"assets/skybox/day/day_py.png",
+				"assets/skybox/day/day_ny.png",
+				"assets/skybox/day/day_pz.png",
+				"assets/skybox/day/day_nz.png"
+		}
+		);
+
 		auto vShader = std::make_shared<VertexShader>("resources/VertexShader.cso");
 
 		auto& gameEntity = mScene->CreateEntity<Entity>();
@@ -91,7 +103,16 @@ public:
 		boatModelEntity.transform.SetScale(1, 1, 1);
 		boatEntity.SetBoatModelEntity(&boatModelEntity);
 
+		auto boatMaterial = boatModelEntity.GetModel()->GetMaterial(0);
+		boatMaterial->SetCubemapTexture(skyboxCubemap);
+		boatMaterial->SetReflectiveness(0.1f);
+
 		auto cubeModel = std::make_shared<OBJModel>("assets/cube/cube.obj", vShader);
+
+		auto cubeMaterial = cubeModel->GetMaterial(0);
+		cubeMaterial->SetCubemapTexture(skyboxCubemap);
+		cubeMaterial->SetReflectiveness(0.0f);
+
 		auto& cubeEntity = mScene->CreateEntity<ModelEntity>(cubeModel);
 		cubeEntity.Attach(&rootEntity);
 		cubeEntity.transform.SetPosition(-0.375f, 0.3f, 0.361f);
@@ -116,6 +137,10 @@ public:
 		motorModelEntity.transform.SetPosition(0, 0, 0);
 		motorModelEntity.transform.SetScale(1, 1, 1);
 
+		auto engineMaterial = boatEngineModel->GetMaterial(0);
+		engineMaterial->SetCubemapTexture(skyboxCubemap);
+		engineMaterial->SetReflectiveness(0.3f);
+
 		auto& propellerEntity = mScene->CreateEntity<Entity>();
 		propellerEntity.Attach(&motorHingeEntity);
 		propellerEntity.SetName("Propeller");
@@ -125,18 +150,6 @@ public:
 		/* Ocean */
 		{
 			auto vShaderWater = std::make_shared<VertexShader>("resources/WaterVertexShader.cso");
-
-			auto skyboxCubemap = std::make_shared<CubemapTexture>(
-				std::array<std::string, 6>
-			{
-				"assets/skybox/day/day_px.png",
-					"assets/skybox/day/day_nx.png",
-					"assets/skybox/day/day_py.png",
-					"assets/skybox/day/day_ny.png",
-					"assets/skybox/day/day_pz.png",
-					"assets/skybox/day/day_nz.png"
-			}
-			);
 
 			auto oceanModel = std::make_shared<OBJModel>("assets/ocean/ocean.obj", vShaderWater);
 			std::shared_ptr<Material> oceanMaterial = oceanModel->GetMaterialByName("Ocean");

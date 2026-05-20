@@ -227,10 +227,10 @@ void BoatEntity::UpdateSelf(double deltaTime)
 
 		constexpr float A = 500.0f;
 		constexpr float k = 6.0f;
-		mWaterTurnTorque = A * (expf(k * mAngularVelocity.y) - 1);
+		mWaterTurnTorque = -A * (expf(k * mAngularVelocity.y) - 1);
 		float angularDeceleration = (mWaterTurnTorque / momentOfInertia) * (2 * volumeUnderWaterRatio); // Because the equation assumes half the volume is under water
 
-		mAngularVelocity.y -= angularDeceleration * delta;
+		mAngularVelocity.y += angularDeceleration * delta;
 
 		transform.RotateY(mAngularVelocity.y);
 		XMMATRIX rotationMatrix = XMMatrixRotationY(mAngularVelocity.y);
@@ -357,10 +357,10 @@ void BoatEntity::UpdateSelf(double deltaTime)
 
 		constexpr float A = 300.0f;
 		constexpr float k = 6.0f;
-		mWaterPitchTorque = A * (expf(k * mAngularVelocity.x) - 1);
+		mWaterPitchTorque = -A * (expf(k * mAngularVelocity.x) - 1);
 		float angularDeceleration = mWaterPitchTorque / momentOfInertia * (2 * volumeUnderWaterRatio); // Because the equation assumes half the volume is under water
 
-		mAngularVelocity.x -= angularDeceleration * delta;
+		mAngularVelocity.x += angularDeceleration * delta;
 	}
 
 	switch (mState)

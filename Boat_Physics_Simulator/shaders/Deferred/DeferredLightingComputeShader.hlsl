@@ -326,14 +326,6 @@ float4x4 Inverse(float4x4 m)
     return ret;
 }
 
-float3 ReconstructWorldPosition(float2 uv, float depth)
-{
-    float2 ndc = float2(2.0f * uv.x - 1.0f, -2.0f * uv.y + 1.0f);
-    float4 positionClip = float4(ndc, depth, 1.0f);
-    float4 positionWorld = mul(Inverse(viewProjMatrix), positionClip);
-    return positionWorld.xyz / positionWorld.w;
-}
-
 [numthreads(8, 8, 1)]
 void main( uint3 DTid : SV_DispatchThreadID)
 {   
@@ -349,12 +341,22 @@ void main( uint3 DTid : SV_DispatchThreadID)
     bool isSomething = positionGBuffer[screenPos].w;
     
     if (!isSomething) {
-        float depth = depthTexture[screenPos].r;
-        worldPosition = ReconstructWorldPosition(screenUV, depth);
-        float3 viewV = normalize(cameraPos - worldPosition);
-        float3 skyColour = skyTexture.SampleLevel(defaultSampler, -viewV, 0).rgb;
-        float fogFactor = pow(saturate(dot(-viewV, float3(0, 1, 0))), 1.0f / 2.0f);
-        backBufferUAV[uint3(screenPos, 0)] = float4(lerp(fogColor, skyColour, fogFactor), 1.0f);
+        float4x4 projectionMatrix = mul(viewProjMatrix, Inverse(viewMatrix));
+        float4x4 invProjectionMatrix = Inverse(projectionMatrix);
+        float4x4 invViewMatrix = Inverse(viewMatrix);
+        
+        float2 positionClip = screenUV * float2(2.0, -2.0) + float2(-1.0, 1.0);
+
+        float4 viewV = mul(invProjectionMatrix, float4(positionClip, 1.0, 1.0));
+        viewV /= viewV.w;
+
+        float3 worldViewV = normalize(mul((float3x3) invViewMatrix, viewV.xyz));
+
+        float3 skyColor = skyTexture.SampleLevel(defaultSampler, worldViewV, 0).rgb;
+
+        float fogFactor = pow(saturate(dot(worldViewV, float3(0, 1, 0))), 1.0f / 2.0f);
+        backBufferUAV[uint3(screenPos, 0)] = float4(lerp(fogColor, skyColor, fogFactor), 1.0f);
+
         return;
     }
     
