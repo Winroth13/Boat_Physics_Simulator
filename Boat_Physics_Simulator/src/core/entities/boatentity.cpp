@@ -569,12 +569,6 @@ void BoatEntity::Input(float delta)
 
 void BoatEntity::RenderImguiSelf()
 {
-	if (ImGui::Button("Start Game"))
-	{
-		mPause = false;
-		mGameEntity->SetVisible(true);
-	}
-
 	if (ImGui::TreeNodeEx("Settings", TREE_NODE_FLAGS))
 	{
 		ImGui::SeparatorText("Simulation");
