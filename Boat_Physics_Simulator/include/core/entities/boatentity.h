@@ -73,7 +73,7 @@ private:
 	static constexpr float EQUILIBRIUM_VELOCITY_THRESHOLD = 0.3f;
 
 	static constexpr float MIN_VELOCITY = 0.1f;
-	static constexpr float MAX_VELOCITY = 30.0f;
+	static constexpr float MAX_VELOCITY = 50.0f;
 
 	static constexpr float ASCENDING_END_THRESHOLD = 0.1f;
 
