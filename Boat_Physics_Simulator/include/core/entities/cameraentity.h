@@ -7,6 +7,8 @@ public:
 	CameraEntity();
 	~CameraEntity();
 
+    void SetFov(float fov);
+
 protected:
 	virtual void UpdateSelf(double delta) override;
 	virtual void RenderSelf(RenderServer& renderServer) override;

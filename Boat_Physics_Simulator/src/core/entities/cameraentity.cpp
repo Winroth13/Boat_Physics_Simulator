@@ -4,9 +4,22 @@
 #include "imgui/imgui.h"
 #include "core/imguiflags.h"
 
+#include "core/scene.h"
+
 CameraEntity::CameraEntity() : Entity("Camera") {}
 
 CameraEntity::~CameraEntity() {}
+
+void CameraEntity::SetFov(float fov)
+{
+    auto& camera = GetScene().GetCamera();
+    camera.SetPerspectiveLens(
+        fov,
+        camera.GetAspect(),
+        camera.GetNearZ(),
+        camera.GetFarZ()
+    );
+}
 
 void CameraEntity::UpdateSelf(double delta)
 {
