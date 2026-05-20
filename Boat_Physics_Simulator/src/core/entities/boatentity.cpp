@@ -124,20 +124,27 @@ void BoatEntity::UpdateSelf(double deltaTime)
 
 	/* Calculate Forward Thrust Force */
 	{
-		if (mForwardUserInput > 0.0f && velocityForwardScalar < MIN_VELOCITY) // If you start the boat when standing still
+		if (mPropellerEntity->GetGlobalPosition().y <= 0)
 		{
-			velocityForwardScalar = MIN_VELOCITY;
-		}
+			if (mForwardUserInput > 0.0f && velocityForwardScalar < MIN_VELOCITY) // If you start the boat when standing still
+			{
+				velocityForwardScalar = MIN_VELOCITY;
+			}
 
-		if (velocityForwardScalar >= MIN_VELOCITY) // If the velocity is low enough, the boat stops
-		{
-			float numerator = (mForwardUserInput * mTotalEfficiency * mEnginePower);
-			float denominator = (mHullEfficiency * velocityForwardScalar * (1 - mWakeFactor));
-			mThrustForce = numerator / denominator;
+			if (velocityForwardScalar >= MIN_VELOCITY) // If the velocity is low enough, the boat stops
+			{
+				float numerator = (mForwardUserInput * mTotalEfficiency * mEnginePower);
+				float denominator = (mHullEfficiency * velocityForwardScalar * (1 - mWakeFactor));
+				mThrustForce = numerator / denominator;
+			}
+			else
+			{
+				velocity *= XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+				mThrustForce = 0;
+			}
 		}
 		else
 		{
-			velocity *= XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
 			mThrustForce = 0;
 		}
 	}
@@ -336,18 +343,18 @@ void BoatEntity::UpdateSelf(double deltaTime)
 
 		/* Water torque dampening */
 
-		/*float pitch = mRootEntity->transform.GetAngles3f().x;
+		// Byt A, K är den samma, detta antar halva volymen under vattnet
 
-		float waterTorqueDragForce = CalculateWaterDragForce(WATER_DENSITY, mBottomAreaUnderWater, mCh, mAngularVelocity.x) * 100;
+		/*constexpr float A = 500.0f;
+		constexpr float k = 6.0f;
+		float waterTorque = A * (expf(k * mAngularVelocity.y) - 1);
+		float angularDeceleration = waterTorque / momentOfInertia;
 
-		float angularDeceleration = waterTorqueDragForce / XMVectorGetX(XMVector3Length(momentOfIntertiaV));
+		mAngularVelocity.y -= angularDeceleration * delta;
 
-		if (pitch > 0)
-			angularDeceleration *= -1;
-
-		mAngularVelocity.x -= angularDeceleration * delta;
-
-		Logger::Info(std::to_string(angularDeceleration));*/
+		transform.RotateY(mAngularVelocity.y);
+		XMMATRIX rotationMatrix = XMMatrixRotationY(mAngularVelocity.y);
+		velocity = XMVector3Transform(velocity, rotationMatrix);*/
 	}
 
 	switch (mState)
