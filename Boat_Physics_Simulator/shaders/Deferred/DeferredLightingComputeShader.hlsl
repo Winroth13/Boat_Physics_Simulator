@@ -3,6 +3,9 @@ RWTexture2DArray<unorm float4> backBufferUAV;
 Texture2D<float4> positionGBuffer : register(t11);
 Texture2D<float4> normalGBuffer : register(t12);
 Texture2D<float4> colorGBuffer : register(t13);
+Texture2D<float4> depthTexture : register(t14);
+
+TextureCube<float4> skyTexture : register(t15);
 
 // Lights
 struct DirectionalLight
@@ -68,7 +71,7 @@ cbuffer cbPerView : register(b1)
     float4x4 viewProjMatrix;
     float4x4 viewMatrix;
     float3 cameraPos;
-    float pad2;
+    float pad;
 };
 
 StructuredBuffer<DirectionalLight> directionalLights : register(t0);
@@ -81,6 +84,7 @@ Texture2DArray<float> directionalLightShadowMaps : register(t8);
 TextureCubeArray<float> pointLightShadowMaps : register(t9);
 Texture2DArray<float> spotLightShadowMaps : register(t10);
 
+sampler defaultSampler : register(s0);
 sampler shadowMapSampler : register(s1);
 
 #define WIRE_FRAME 1
@@ -97,6 +101,11 @@ sampler shadowMapSampler : register(s1);
 #define OMNI_SHADOW_SAMPLES 12
 #define OMNI_SHADOW_DISK_RADIUS 0.01f
 #define OMNI_SHADOW_OFFSET_STRENGTH 0.02f
+
+float LinearizeDepth(float d, float zNear, float zFar)
+{
+    return zNear * zFar / (zFar + d * (zNear - zFar));
+}
 
 float calcOmniShadowFactor(
     float3 fragmentWorldPosition,
@@ -277,17 +286,77 @@ float3 CalculateLightColor(
     return totalLight;
 }
 
+float4x4 Inverse(float4x4 m)
+{
+    float n11 = m[0][0], n12 = m[1][0], n13 = m[2][0], n14 = m[3][0];
+    float n21 = m[0][1], n22 = m[1][1], n23 = m[2][1], n24 = m[3][1];
+    float n31 = m[0][2], n32 = m[1][2], n33 = m[2][2], n34 = m[3][2];
+    float n41 = m[0][3], n42 = m[1][3], n43 = m[2][3], n44 = m[3][3];
+
+    float t11 = n23 * n34 * n42 - n24 * n33 * n42 + n24 * n32 * n43 - n22 * n34 * n43 - n23 * n32 * n44 + n22 * n33 * n44;
+    float t12 = n14 * n33 * n42 - n13 * n34 * n42 - n14 * n32 * n43 + n12 * n34 * n43 + n13 * n32 * n44 - n12 * n33 * n44;
+    float t13 = n13 * n24 * n42 - n14 * n23 * n42 + n14 * n22 * n43 - n12 * n24 * n43 - n13 * n22 * n44 + n12 * n23 * n44;
+    float t14 = n14 * n23 * n32 - n13 * n24 * n32 - n14 * n22 * n33 + n12 * n24 * n33 + n13 * n22 * n34 - n12 * n23 * n34;
+
+    float det = n11 * t11 + n21 * t12 + n31 * t13 + n41 * t14;
+    float idet = 1.0f / det;
+
+    float4x4 ret;
+
+    ret[0][0] = t11 * idet;
+    ret[0][1] = (n24 * n33 * n41 - n23 * n34 * n41 - n24 * n31 * n43 + n21 * n34 * n43 + n23 * n31 * n44 - n21 * n33 * n44) * idet;
+    ret[0][2] = (n22 * n34 * n41 - n24 * n32 * n41 + n24 * n31 * n42 - n21 * n34 * n42 - n22 * n31 * n44 + n21 * n32 * n44) * idet;
+    ret[0][3] = (n23 * n32 * n41 - n22 * n33 * n41 - n23 * n31 * n42 + n21 * n33 * n42 + n22 * n31 * n43 - n21 * n32 * n43) * idet;
+
+    ret[1][0] = t12 * idet;
+    ret[1][1] = (n13 * n34 * n41 - n14 * n33 * n41 + n14 * n31 * n43 - n11 * n34 * n43 - n13 * n31 * n44 + n11 * n33 * n44) * idet;
+    ret[1][2] = (n14 * n32 * n41 - n12 * n34 * n41 - n14 * n31 * n42 + n11 * n34 * n42 + n12 * n31 * n44 - n11 * n32 * n44) * idet;
+    ret[1][3] = (n12 * n33 * n41 - n13 * n32 * n41 + n13 * n31 * n42 - n11 * n33 * n42 - n12 * n31 * n43 + n11 * n32 * n43) * idet;
+
+    ret[2][0] = t13 * idet;
+    ret[2][1] = (n14 * n23 * n41 - n13 * n24 * n41 - n14 * n21 * n43 + n11 * n24 * n43 + n13 * n21 * n44 - n11 * n23 * n44) * idet;
+    ret[2][2] = (n12 * n24 * n41 - n14 * n22 * n41 + n14 * n21 * n42 - n11 * n24 * n42 - n12 * n21 * n44 + n11 * n22 * n44) * idet;
+    ret[2][3] = (n13 * n22 * n41 - n12 * n23 * n41 - n13 * n21 * n42 + n11 * n23 * n42 + n12 * n21 * n43 - n11 * n22 * n43) * idet;
+
+    ret[3][0] = t14 * idet;
+    ret[3][1] = (n13 * n24 * n31 - n14 * n23 * n31 + n14 * n21 * n33 - n11 * n24 * n33 - n13 * n21 * n34 + n11 * n23 * n34) * idet;
+    ret[3][2] = (n14 * n22 * n31 - n12 * n24 * n31 - n14 * n21 * n32 + n11 * n24 * n32 + n12 * n21 * n34 - n11 * n22 * n34) * idet;
+    ret[3][3] = (n12 * n23 * n31 - n13 * n22 * n31 + n13 * n21 * n32 - n11 * n23 * n32 - n12 * n21 * n33 + n11 * n22 * n33) * idet;
+
+    return ret;
+}
+
+float3 ReconstructWorldPosition(float2 uv, float depth)
+{
+    float2 ndc = float2(2.0f * uv.x - 1.0f, -2.0f * uv.y + 1.0f);
+    float4 positionClip = float4(ndc, depth, 1.0f);
+    float4 positionWorld = mul(Inverse(viewProjMatrix), positionClip);
+    return positionWorld.xyz / positionWorld.w;
+}
+
 [numthreads(8, 8, 1)]
 void main( uint3 DTid : SV_DispatchThreadID)
 {   
     uint2 screenPos = DTid.xy;
     float2 screenUV = float2(DTid.x / (float) screenDimensions.x, DTid.y / (float) screenDimensions.y);
 
+    float3 fogColor = float3(0.7f, 0.8f, 1.0f);
+
     float3 worldPosition = positionGBuffer[screenPos].xyz;
     float3 worldNormal = normalGBuffer[screenPos].xyz;
     float3 texColor = colorGBuffer[screenPos].rgb;
     uint materialIndex = colorGBuffer[screenPos].a;
     bool isSomething = positionGBuffer[screenPos].w;
+    
+    if (!isSomething) {
+        float depth = depthTexture[screenPos].r;
+        worldPosition = ReconstructWorldPosition(screenUV, depth);
+        float3 viewV = normalize(cameraPos - worldPosition);
+        float3 skyColour = skyTexture.SampleLevel(defaultSampler, -viewV, 0).rgb;
+        float fogFactor = pow(saturate(dot(-viewV, float3(0, 1, 0))), 1.0f / 2.0f);
+        backBufferUAV[uint3(screenPos, 0)] = float4(lerp(fogColor, skyColour, fogFactor), 1.0f);
+        return;
+    }
     
     if ((flags & SHOW_GBUFFERS) == SHOW_GBUFFERS)
     {
@@ -327,11 +396,6 @@ void main( uint3 DTid : SV_DispatchThreadID)
         texColor = colorGBuffer[offsetScreenPos].rgb;
         materialIndex = colorGBuffer[offsetScreenPos].a;
         isSomething = positionGBuffer[offsetScreenPos].w;
-    }
-
-    if (!isSomething)
-    {
-        return;
     }
     
     float3 totalLight;
@@ -437,10 +501,15 @@ void main( uint3 DTid : SV_DispatchThreadID)
         }
     }
 
-    /*float3 cameraToFrag = normalize(worldPosition - cameraPos);
-    
-    float depth = pointLightShadowMaps.SampleLevel(shadowMapSampler, float4(cameraToFrag, 1), 0);
-    totalLight = float3(depth, depth, depth);*/
-    
-    backBufferUAV[uint3(screenPos, 0)] = float4(totalLight.rgb, 1.0f);
+    /* Distance based fog */
+    float depth = LinearizeDepth(pow(depthTexture[screenPos].r, 1.0f / 5.0f), 0.1f, FAR_PLANE);
+    float fogStart = 0.1f;
+    float fogEnd = FAR_PLANE;
+    float fogFactor = saturate((depth - fogStart) / (fogEnd - fogStart));
+
+    float3 finalColor = lerp(totalLight, fogColor, fogFactor);
+
+    //finalColor.rgb = float3(depth, depth, depth);
+
+    backBufferUAV[uint3(screenPos, 0)] = float4(finalColor.rgb, 1.0f);
 }

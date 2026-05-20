@@ -70,7 +70,7 @@ struct PerViewBuffer
 	DirectX::XMMATRIX viewProj;
 	DirectX::XMMATRIX view;
 	DirectX::XMFLOAT3 cameraPos;
-	float pad0;
+    float pad0;
 };
 
 struct PerObject
@@ -342,6 +342,8 @@ private:
 	/* Debug Drawing */
 	std::vector<AABBData> mAABBData;
 	std::vector<LineData> mLineData;
+
+    std::unique_ptr<CubemapTexture> mSkyboxTexture;
 
 	DirectX::XMFLOAT4 mClearColor;
 	Window* mWindow;

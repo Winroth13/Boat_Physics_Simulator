@@ -24,6 +24,7 @@ public:
 	ID3D11ShaderResourceView* GetSRV(GBufferType type) { return mGBufferResourceViews[static_cast<size_t>(type)]; }
 	ID3D11RenderTargetView* GetRTV(GBufferType type) { return mGBufferRenderTargetViews[static_cast<size_t>(type)]; }
 	ID3D11DepthStencilView* GetDSV() { return mDepthStencilView; }
+    ID3D11ShaderResourceView* GetDepthSRV() { return mDepthStencilSRV; }
 	D3D11_VIEWPORT& GetViewport() { return mViewport; }
 
 	std::vector<ID3D11ShaderResourceView*>& GetSRVs() { return mGBufferResourceViews; }
@@ -36,6 +37,7 @@ private:
 
 	ID3D11Texture2D* mDepthStencilTexture = nullptr;
 	ID3D11DepthStencilView* mDepthStencilView = nullptr;
+    ID3D11ShaderResourceView* mDepthStencilSRV = nullptr;
 
 	D3D11_VIEWPORT mViewport = {};
 	uint32_t mWidth;

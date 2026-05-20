@@ -26,6 +26,9 @@ GBuffers::~GBuffers()
 	if (mDepthStencilView != nullptr)
 		mDepthStencilView->Release();
 
+    if (mDepthStencilSRV != nullptr)
+        mDepthStencilSRV->Release();
+
 	if (mDepthStencilTexture != nullptr)
 		mDepthStencilTexture->Release();
 }
@@ -97,11 +100,11 @@ bool GBuffers::Create(uint32_t width, uint32_t height)
 		textureDesc.Height = static_cast<UINT>(height);
 		textureDesc.MipLevels = 1;
 		textureDesc.ArraySize = 1;
-		textureDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+		textureDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
 		textureDesc.SampleDesc.Count = 1;
 		textureDesc.SampleDesc.Quality = 0;
 		textureDesc.Usage = D3D11_USAGE_DEFAULT;
-		textureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+		textureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
 		textureDesc.CPUAccessFlags = 0;
 		textureDesc.MiscFlags = 0;
 
@@ -111,10 +114,29 @@ bool GBuffers::Create(uint32_t width, uint32_t height)
 			return false;
 		}
 
-		if (FAILED(Renderer::GetDevice()->CreateDepthStencilView(mDepthStencilTexture, nullptr, &mDepthStencilView)))
+        D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+        dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+        dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+
+		if (FAILED(Renderer::GetDevice()->CreateDepthStencilView(mDepthStencilTexture, &dsvDesc, &mDepthStencilView)))
 		{
 			Logger::Error("Failed to create depth stencil view");
 			return false;
+		}
+	}
+
+	/* Depth Stencil SRV */
+	{
+        D3D11_SHADER_RESOURCE_VIEW_DESC desc = {};
+        desc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+        desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+        desc.Texture2D.MipLevels = 1;
+        desc.Texture2D.MostDetailedMip = 0;
+
+		if (FAILED(Renderer::GetDevice()->CreateShaderResourceView(mDepthStencilTexture, &desc, &mDepthStencilSRV)))
+		{
+            Logger::Error("Failed to create depth stencil srv");
+            return false;
 		}
 	}
 

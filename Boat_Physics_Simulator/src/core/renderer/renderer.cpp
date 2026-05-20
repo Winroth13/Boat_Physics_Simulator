@@ -580,6 +580,18 @@ bool Renderer::Create(DirectX::XMFLOAT4 clearColor, Window* window)
 	mRasterizerDesc.CullMode = D3D11_CULL_BACK;
 	mRasterizerDesc.FillMode = D3D11_FILL_SOLID;
 
+    mSkyboxTexture = std::make_unique<CubemapTexture>(
+        std::array<std::string, 6>
+    {
+        "assets/skybox/day/day_px.png",
+        "assets/skybox/day/day_nx.png",
+        "assets/skybox/day/day_py.png",
+        "assets/skybox/day/day_ny.png",
+        "assets/skybox/day/day_pz.png",
+        "assets/skybox/day/day_nz.png"
+    }
+    );
+
 	return true;
 }
 
@@ -1304,11 +1316,30 @@ void Renderer::RenderDeferred(ID3D11UnorderedAccessView* backBuffer, GBuffers& b
 				buffers.GetSRVs().data()
 			);
 
+			/* Bind Depth Stencil View */
+            ID3D11ShaderResourceView* depthSRV = buffers.GetDepthSRV();
+            mImmediateContext->CSSetShaderResources(
+                GBUFFER_START_SLOT + static_cast<UINT>(GBufferType::MAX),
+				1,
+				&depthSRV
+            );
+
+			/* Bind Sybox */
+            ID3D11ShaderResourceView* skyboxSRV = mSkyboxTexture->GetSRV();
+            mImmediateContext->CSSetShaderResources(
+                GBUFFER_START_SLOT + static_cast<UINT>(GBufferType::MAX) + 1,
+				1,
+				&skyboxSRV
+            );
+
 			/* Bind Render Target */
 			mImmediateContext->CSSetUnorderedAccessViews(0, 1, &backBuffer, nullptr);
 
 			/* Bind Materials Shader Views */
 			mImmediateContext->CSSetShaderResources(DEFERRED_MATERIALS_SLOT, 1, &mMaterialsSRV);
+
+			/* Bind Default Sampler */
+            mImmediateContext->CSSetSamplers(0, 1, &mDefaultSampler);
 
 			/* Bind Shadow Sampler */
 			mImmediateContext->CSSetSamplers(SHADOW_MAP_SAMPLER_SLOT, 1, &mShadowMapSampler);
@@ -1349,11 +1380,11 @@ void Renderer::RenderDeferred(ID3D11UnorderedAccessView* backBuffer, GBuffers& b
 			mImmediateContext->CSSetShaderResources(DIRECTIONAL_LIGHT_SHADOW_MAPS_SLOT, 1, &views);
 
 			/* Unbind GBuffer Shader Views */
-			ID3D11ShaderResourceView* nullShaderViews[static_cast<UINT>(GBufferType::MAX)] = { nullptr };
+			ID3D11ShaderResourceView* nullShaderViews[static_cast<UINT>(GBufferType::MAX) + 2] = { nullptr };
 
 			mImmediateContext->CSSetShaderResources(
 				GBUFFER_START_SLOT,
-				static_cast<UINT>(GBufferType::MAX),
+				static_cast<UINT>(GBufferType::MAX) + 2, // Unbind depths scencil and skybox aswell.
 				nullShaderViews
 			);
 
