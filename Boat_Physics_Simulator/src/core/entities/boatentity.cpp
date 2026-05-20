@@ -355,7 +355,7 @@ void BoatEntity::UpdateSelf(double deltaTime)
 
 		float volumeUnderWaterRatio = mVolumeUnderWater / totalVolume;
 
-		constexpr float A = 300.0f;
+		constexpr float A = 1000.0f;
 		constexpr float k = 6.0f;
 		mWaterPitchTorque = -A * (expf(k * mAngularVelocity.x) - 1);
 		float angularDeceleration = mWaterPitchTorque / momentOfInertia * (2 * volumeUnderWaterRatio); // Because the equation assumes half the volume is under water
