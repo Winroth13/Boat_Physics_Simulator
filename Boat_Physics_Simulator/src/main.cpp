@@ -164,7 +164,7 @@ public:
 			)
 		);
 		camera = &cameraEntity;
-        boatEntity.SetCameraEntity(&cameraEntity);
+		boatEntity.SetCameraEntity(&cameraEntity);
 
 		auto mattiasModel = std::make_shared<OBJModel>("assets/mattias/mattias.obj", vShader, false);
 
@@ -282,12 +282,12 @@ public:
 		{
 			constexpr float AMPLITUDE = 0.0001f;
 			mattias->transform.MoveZ(sinf(time) * AMPLITUDE);
-			mattias->transform.MoveY(cosf(time) * AMPLITUDE * 0.5);
+			mattias->transform.MoveY(cosf(time) * AMPLITUDE * 0.5f);
 		}
 		else
 		{
-			mattias->transform.MoveY(4.0 * delta);
-			mattias->transform.MoveZ(1.0 * delta);
+			mattias->transform.MoveY(4.0f * static_cast<float>(delta));
+			mattias->transform.MoveZ(1.0f * static_cast<float>(delta));
 			if (mattias->transform.GetPosition3f().y > 2)
 			{
 				mattias->SetVisible(false);
@@ -428,71 +428,71 @@ public:
 			{
 				inspectorEntity->RenderImgui();
 
-                if (false)
-                {
-                    /* Draw Gizmos */
-                    {
-                        ImGuizmo::Enable(true);
-                        ImGuizmo::SetRect(0, 0, 1280, 640); // TODO: Do not hardcode screen dimensions
-                        ImGuizmo::AllowAxisFlip(true);
-                        ImGuizmo::SetOrthographic(true);
+				if (false)
+				{
+					/* Draw Gizmos */
+					{
+						ImGuizmo::Enable(true);
+						ImGuizmo::SetRect(0, 0, 1280, 640); // TODO: Do not hardcode screen dimensions
+						ImGuizmo::AllowAxisFlip(true);
+						ImGuizmo::SetOrthographic(true);
 
-                        auto& camera = mScene->GetCamera();
-                        Entity* attachEnt = inspectorEntity->GetAttachEntity();
+						auto& camera = mScene->GetCamera();
+						Entity* attachEnt = inspectorEntity->GetAttachEntity();
 
-                        DirectX::XMFLOAT4X4 view = camera.GetView4x4f();
-                        DirectX::XMFLOAT4X4 proj = camera.GetProj4x4f();
+						DirectX::XMFLOAT4X4 view = camera.GetView4x4f();
+						DirectX::XMFLOAT4X4 proj = camera.GetProj4x4f();
 
-                        DirectX::XMFLOAT4X4 localMat;
-                        DirectX::XMStoreFloat4x4(&localMat, inspectorEntity->GetGlobalTransform());
+						DirectX::XMFLOAT4X4 localMat;
+						DirectX::XMStoreFloat4x4(&localMat, inspectorEntity->GetGlobalTransform());
 
-                        Transform& transform = inspectorEntity->transform;
+						Transform& transform = inspectorEntity->transform;
 
-                        float translate[3] = { -1, -1, -1 };
-                        float rotation[3] = { -1, -1, -1 };
-                        float scale[3] = { -1, -1, -1 };
+						float translate[3] = { -1, -1, -1 };
+						float rotation[3] = { -1, -1, -1 };
+						float scale[3] = { -1, -1, -1 };
 
-                        if (ImGuizmo::Manipulate(*view.m, *proj.m, mGizmoOperation, ImGuizmo::LOCAL, *localMat.m, NULL, NULL))
-                        {
-                            ImGuizmo::DecomposeMatrixToComponents(*localMat.m, translate, rotation, scale);
+						if (ImGuizmo::Manipulate(*view.m, *proj.m, mGizmoOperation, ImGuizmo::LOCAL, *localMat.m, NULL, NULL))
+						{
+							ImGuizmo::DecomposeMatrixToComponents(*localMat.m, translate, rotation, scale);
 
-                            switch (mGizmoOperation)
-                            {
-                            case ImGuizmo::TRANSLATE:
-                                if (inspectorEntity->HasAttach())
-                                {
-                                    DirectX::XMFLOAT3 invAttachPos = attachEnt->GetGlobalPosition();
-                                    invAttachPos.x = -invAttachPos.x;
-                                    invAttachPos.y = -invAttachPos.y;
-                                    invAttachPos.z = -invAttachPos.z;
-                                    translate[0] += invAttachPos.x;
-                                    translate[1] += invAttachPos.y;
-                                    translate[2] += invAttachPos.z;
-                                }
+							switch (mGizmoOperation)
+							{
+							case ImGuizmo::TRANSLATE:
+								if (inspectorEntity->HasAttach())
+								{
+									DirectX::XMFLOAT3 invAttachPos = attachEnt->GetGlobalPosition();
+									invAttachPos.x = -invAttachPos.x;
+									invAttachPos.y = -invAttachPos.y;
+									invAttachPos.z = -invAttachPos.z;
+									translate[0] += invAttachPos.x;
+									translate[1] += invAttachPos.y;
+									translate[2] += invAttachPos.z;
+								}
 
-                                transform.SetPosition(translate[0], translate[1], translate[2]);
-                                break;
+								transform.SetPosition(translate[0], translate[1], translate[2]);
+								break;
 
-                            case ImGuizmo::SCALE:
-                                if (inspectorEntity->HasAttach())
-                                {
-                                    DirectX::XMFLOAT3 invAttachScale = attachEnt->GetGlobalScale();
-                                    invAttachScale.x = -invAttachScale.x;
-                                    invAttachScale.y = -invAttachScale.y;
-                                    invAttachScale.z = -invAttachScale.z;
-                                    scale[0] += invAttachScale.x;
-                                    scale[1] += invAttachScale.y;
-                                    scale[2] += invAttachScale.z;
-                                }
-                                transform.SetScale(scale[0], scale[1], scale[2]);
-                                break;
+							case ImGuizmo::SCALE:
+								if (inspectorEntity->HasAttach())
+								{
+									DirectX::XMFLOAT3 invAttachScale = attachEnt->GetGlobalScale();
+									invAttachScale.x = -invAttachScale.x;
+									invAttachScale.y = -invAttachScale.y;
+									invAttachScale.z = -invAttachScale.z;
+									scale[0] += invAttachScale.x;
+									scale[1] += invAttachScale.y;
+									scale[2] += invAttachScale.z;
+								}
+								transform.SetScale(scale[0], scale[1], scale[2]);
+								break;
 
-                            default:
-                                break;
-                            }
-                        }
-                    }
-                }
+							default:
+								break;
+							}
+						}
+					}
+				}
 			}
 			ImGui::End();
 		}

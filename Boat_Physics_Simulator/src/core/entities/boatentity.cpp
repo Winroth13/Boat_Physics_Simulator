@@ -101,6 +101,12 @@ void BoatEntity::UpdateSelf(double deltaTime)
 	float t = (XMVectorGetX(XMVector3Length(velocity)) - MIN_VELOCITY) / (MAX_VELOCITY - MIN_VELOCITY);
 	t = t * t;
 	float fov = MIN_FOV + t * (MAX_FOV - MIN_FOV);
+
+	if (fov > MAX_FOV)
+		fov = MAX_FOV;
+	else if (fov < MIN_FOV)
+		fov = MIN_FOV;
+
 	mCameraEntity->SetFov(fov);
 
 #if 1
@@ -149,6 +155,47 @@ void BoatEntity::UpdateSelf(double deltaTime)
 		}
 	}
 
+	XMMATRIX transformMatrix = mBoatModelEntity->GetGlobalTransform();
+
+	std::vector<PointCloud> aboveWaterPointClouds;
+	std::vector<PointCloud> belowWaterPointClouds;
+
+	/* Calculate Boat Volumes */
+	{
+		PointCloud above;
+		PointCloud below;
+
+		SplitPointCloud(GetPointCloud(PointCloudType::BOAT), transformMatrix, 0.0f, above, below);
+		mVolumeUnderWater = below.GetVolume();
+
+		aboveWaterPointClouds.push_back(above);
+		belowWaterPointClouds.push_back(below);
+	}
+
+	/* Calculate Air Volumes */
+	{
+		PointCloud above;
+		PointCloud below;
+
+		SplitPointCloud(GetPointCloud(PointCloudType::AIR), transformMatrix, 0.0f, above, below);
+		mVolumeUnderWater += below.GetVolume();
+
+		aboveWaterPointClouds.push_back(above);
+		belowWaterPointClouds.push_back(below);
+	}
+
+	/* Calculate Engine Volumes */
+	{
+		PointCloud above;
+		PointCloud below;
+
+		SplitPointCloud(GetPointCloud(PointCloudType::ENGINE), transformMatrix, 0.0f, above, below);
+		mVolumeUnderWater += below.GetVolume();
+
+		aboveWaterPointClouds.push_back(above);
+		belowWaterPointClouds.push_back(below);
+	}
+
 	/* Calculate Angular Velocity Yaw */
 	{
 		float turnAngle = GetTurnAngle();
@@ -165,16 +212,23 @@ void BoatEntity::UpdateSelf(double deltaTime)
 		XMVECTOR center = XMVector3Transform(centerOfMass, mRootEntity->GetGlobalTransform());
 		float distanceToCentre = XMVectorGetX(XMVector3Length(propellerPosition - center));
 
-		float torque = mThrustForce * sinf(turnAngle) * distanceToCentre;
+		mEngineTurnTorque = mThrustForce * sinf(turnAngle) * distanceToCentre;
 		float momentOfInertia = CalculateMomentOfInertia(GetBoatLength(), GetBoatWidth(), mMass);
 
-		mAngularAcceleration.y = torque / momentOfInertia;
+		mAngularAcceleration.y = mEngineTurnTorque / momentOfInertia;
 		mAngularVelocity.y = mAngularAcceleration.y * delta;
+
+		float totalVolume = 0.0f;
+		totalVolume += GetPointCloud(PointCloudType::BOAT).GetVolume();
+		totalVolume += GetPointCloud(PointCloudType::AIR).GetVolume();
+		totalVolume += GetPointCloud(PointCloudType::ENGINE).GetVolume();
+
+		float volumeUnderWaterRatio = mVolumeUnderWater / totalVolume;
 
 		constexpr float A = 500.0f;
 		constexpr float k = 6.0f;
-		float waterTorque = A * (expf(k * mAngularVelocity.y) - 1);
-		float angularDeceleration = waterTorque / momentOfInertia;
+		mWaterTurnTorque = A * (expf(k * mAngularVelocity.y) - 1);
+		float angularDeceleration = (mWaterTurnTorque / momentOfInertia) * (2 * volumeUnderWaterRatio); // Because the equation assumes half the volume is under water
 
 		mAngularVelocity.y -= angularDeceleration * delta;
 
@@ -217,54 +271,12 @@ void BoatEntity::UpdateSelf(double deltaTime)
 	float accelerationForwardScalar = (mThrustForce - mWaterDragForce.z) / mMass;
 	acceleration = accelerationForwardScalar * transform.GetForwardDir(); // Forward Thrust Force
 
-	XMMATRIX transformMatrix = mBoatModelEntity->GetGlobalTransform();
-
-	std::vector<PointCloud> aboveWaterPointClouds;
-	std::vector<PointCloud> belowWaterPointClouds;
-
-	/* Calculate Boat Volumes */
-	{
-		PointCloud above;
-		PointCloud below;
-
-		SplitPointCloud(GetPointCloud(PointCloudType::BOAT), transformMatrix, 0.0f, above, below);
-		mVolumeUnderWater = below.GetVolume();
-
-		aboveWaterPointClouds.push_back(above);
-		belowWaterPointClouds.push_back(below);
-	}
-
-	/* Calculate Air Volumes */
-	{
-		PointCloud above;
-		PointCloud below;
-
-		SplitPointCloud(GetPointCloud(PointCloudType::AIR), transformMatrix, 0.0f, above, below);
-		mVolumeUnderWater += below.GetVolume();
-
-		aboveWaterPointClouds.push_back(above);
-		belowWaterPointClouds.push_back(below);
-	}
-
-	/* Calculate Engine Volumes */
-	{
-		PointCloud above;
-		PointCloud below;
-
-		SplitPointCloud(GetPointCloud(PointCloudType::ENGINE), transformMatrix, 0.0f, above, below);
-		mVolumeUnderWater += below.GetVolume();
-
-		aboveWaterPointClouds.push_back(above);
-		belowWaterPointClouds.push_back(below);
-	}
-
 	/* Calculate and apply torque */
 	{
 		XMVECTOR centerOfMass = XMLoadFloat3(&mCenterOfMass);
 		XMVECTOR center = XMVector3Transform(centerOfMass, mRootEntity->GetGlobalTransform());
 		XMVECTOR right = transform.GetRightDir();
 
-		float engineTorque;
 		/* Engine Torque */
 		{
 			XMFLOAT3 propellerGlobalPosition = mPropellerEntity->GetGlobalPosition();
@@ -278,13 +290,12 @@ void BoatEntity::UpdateSelf(double deltaTime)
 			XMVECTOR forwardForceVector = mRootEntity->transform.GetForwardDir() * mThrustForce;
 			float torqueForce = XMVectorGetX(XMVector3Dot(forwardForceVector, torqueUnitVector));
 
-			engineTorque = propellerToCenter * torqueForce;
+			mEnginePitchTorque = propellerToCenter * torqueForce;
 		}
 
 		/* Gravitational torque */
 
 		// Mass over water falling
-		float gravitationalTorque;
 		{
 			// Only count boat and engine clouds, since air does not contribute
 			std::vector<PointCloud> aboveWaterBoatAndEngine;
@@ -305,11 +316,10 @@ void BoatEntity::UpdateSelf(double deltaTime)
 			XMVECTOR gravitationalForce = XMVectorSet(0, -GRAVITY, 0, 0) * fallingMass;
 			float torqueForce = XMVectorGetX(XMVector3Dot(gravitationalForce, torqueUnitVector));
 
-			gravitationalTorque = massAboveToCenter * torqueForce;
+			mGravitationalPitchTorque = massAboveToCenter * torqueForce;
 		}
 
 		// Mass under water ascending
-		float waterTorque;
 		{
 			XMFLOAT3 volumeCenterBelowf = CalculateCenterOfVolume(belowWaterPointClouds);
 			XMVECTOR volumeCenterBelow = XMLoadFloat3(&volumeCenterBelowf);
@@ -321,15 +331,10 @@ void BoatEntity::UpdateSelf(double deltaTime)
 				XMVector3Cross(volumeCenterBelow - center, right)
 			);
 
-			float volumeBelow =
-				belowWaterPointClouds[static_cast<int>(PointCloudType::BOAT)].GetVolume() +
-				belowWaterPointClouds[static_cast<int>(PointCloudType::AIR)].GetVolume() +
-				belowWaterPointClouds[static_cast<int>(PointCloudType::ENGINE)].GetVolume();
-
-			XMVECTOR waterForce = XMVectorSet(0, 1, 0, 0) * volumeBelow * WATER_DENSITY * GRAVITY;
+			XMVECTOR waterForce = XMVectorSet(0, 1, 0, 0) * mVolumeUnderWater * WATER_DENSITY * GRAVITY;
 			float torqueForce = XMVectorGetX(XMVector3Dot(waterForce, torqueUnitVector));
 
-			waterTorque = volumeBelowToCenter * torqueForce;
+			mBuoyancyPitchTorque = volumeBelowToCenter * torqueForce;
 		}
 		/* Resulting torque */
 		XMVECTOR localRight = XMVectorSet(1, 0, 0, 0);
@@ -337,24 +342,25 @@ void BoatEntity::UpdateSelf(double deltaTime)
 			XMVector3Transform(localRight, mMomentOfIntertiaMatrix))
 		);
 		XMVECTOR momentOfIntertiaV = localRight * momentOfIntertiaLength;
+		float momentOfInertia = XMVectorGetX(XMVector3Length(momentOfIntertiaV));
 
-		mAngularAcceleration.x = (engineTorque + gravitationalTorque + waterTorque) / XMVectorGetX(XMVector3Length(momentOfIntertiaV));
+		mAngularAcceleration.x = (mEnginePitchTorque + mGravitationalPitchTorque + mBuoyancyPitchTorque) / momentOfInertia;
 		mAngularVelocity.x += mAngularAcceleration.x * delta;
 
 		/* Water torque dampening */
+		float totalVolume = 0.0f;
+		totalVolume += GetPointCloud(PointCloudType::BOAT).GetVolume();
+		totalVolume += GetPointCloud(PointCloudType::AIR).GetVolume();
+		totalVolume += GetPointCloud(PointCloudType::ENGINE).GetVolume();
 
-		// Byt A, K är den samma, detta antar halva volymen under vattnet
+		float volumeUnderWaterRatio = mVolumeUnderWater / totalVolume;
 
-		/*constexpr float A = 500.0f;
+		constexpr float A = 300.0f;
 		constexpr float k = 6.0f;
-		float waterTorque = A * (expf(k * mAngularVelocity.y) - 1);
-		float angularDeceleration = waterTorque / momentOfInertia;
+		mWaterPitchTorque = A * (expf(k * mAngularVelocity.x) - 1);
+		float angularDeceleration = mWaterPitchTorque / momentOfInertia * (2 * volumeUnderWaterRatio); // Because the equation assumes half the volume is under water
 
-		mAngularVelocity.y -= angularDeceleration * delta;
-
-		transform.RotateY(mAngularVelocity.y);
-		XMMATRIX rotationMatrix = XMMatrixRotationY(mAngularVelocity.y);
-		velocity = XMVector3Transform(velocity, rotationMatrix);*/
+		mAngularVelocity.x -= angularDeceleration * delta;
 	}
 
 	switch (mState)
@@ -618,11 +624,21 @@ void BoatEntity::RenderImguiSelf()
 		ImGui::TextColored(ImVec4(1, 1, 1, 1), "Water Viscosity: %f pas", mWaterViscosity);
 		ImGui::TextColored(ImVec4(1, 1, 1, 1), "CH: %f", mCh);
 
+		ImGui::SeparatorText("Speed");
+
+		XMVECTOR velocityV = XMLoadFloat3(&mVelocity);
+		float velocityScalar = XMVectorGetX(XMVector3Length(velocityV));
+		ImGui::Text("%.2f kn", velocityScalar * 1.94384f);
+		ImGui::Text("%.2f km/h", velocityScalar * 3.6f);
+		ImGui::Text("%.2f m/s", velocityScalar);
+
 		ImGui::TreePop();
 	}
 
 	if (ImGui::TreeNodeEx("Forces", TREE_NODE_FLAGS))
 	{
+		ImGui::SeparatorText("Translation");
+
 		ImGui::Text("Thrust Force: ");
 		ImGui::SameLine();
 		ImGui::TextColored(ImVec4(0.5f, 0.5f, 1.0f, 1.0f), "Z: ");
@@ -635,7 +651,7 @@ void BoatEntity::RenderImguiSelf()
 		ImGui::SameLine();
 		ImGui::Text("%.2f N", mWingForce);
 
-		ImGui::Text("Water Drag Force: ", mWaterDragForce.z);
+		ImGui::Text("Water Drag Force: ");
 		ImGui::SameLine();
 		ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1), "Y: ");
 		ImGui::SameLine();
@@ -646,6 +662,18 @@ void BoatEntity::RenderImguiSelf()
 		ImGui::Text("%.2f ", mWaterDragForce.z);
 		ImGui::SameLine();
 		ImGui::Text(" N");
+
+		ImGui::SeparatorText("Rotation");
+
+		ImGui::Text("Engine Turn Torque: %.2f Nm", mEngineTurnTorque);
+		ImGui::Text("Water Turn Torque: %.2f Nm", mWaterTurnTorque);
+
+		ImGui::SeparatorText("Pitch");
+
+		ImGui::Text("Engine Pitch Torque: %.2f Nm", mEnginePitchTorque);
+		ImGui::Text("Gravitational Pitch Torque: %.2f Nm", mGravitationalPitchTorque);
+		ImGui::Text("Bouyancy Pitch Torque: %.2f Nm", mBuoyancyPitchTorque);
+		ImGui::Text("Water Pitch Torque: %.2f Nm", mWaterPitchTorque);
 
 		ImGui::TreePop();
 	}

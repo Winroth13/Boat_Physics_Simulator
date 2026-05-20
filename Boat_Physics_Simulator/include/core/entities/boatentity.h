@@ -140,6 +140,14 @@ private:
 	DirectX::XMFLOAT3 mWaterDragForce = { 0.0f, 0.0f, 0.0f };
 	float mWingForce = 0.0f;
 
+	float mEngineTurnTorque = 0.0f;
+	float mWaterTurnTorque = 0.0f;
+
+	float mEnginePitchTorque = 0.0f;
+	float mGravitationalPitchTorque = 0.0f;
+	float mBuoyancyPitchTorque = 0.0f;
+	float mWaterPitchTorque = 0.0f;
+
 	float mWaterViscosity = 0.0f;
 	float mReynoldsNumber = 0.0f;
 	float mCh = 0.0f;
