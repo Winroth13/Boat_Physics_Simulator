@@ -42,7 +42,7 @@ void BoatEntity::BeginSelf(RenderServer& renderServer)
 	auto vShader = std::make_shared<VertexShader>("resources/VertexShader.cso");
 	mSphereModel = std::make_unique<OBJModel>("assets/pointclouds/point_sphere.obj", vShader);
 
-	PointCloud boatCloud("assets/pointclouds/new/point_cloud_boat.obj", 500);
+	PointCloud boatCloud("assets/pointclouds/new/point_cloud_boat.obj", 1000);
 	PointCloud airCloud("assets/pointclouds/new/point_cloud_air.obj", 0.125f, 1.225f);
 	PointCloud engineCloud("assets/pointclouds/new/point_cloud_engine.obj", 300);
 
@@ -76,7 +76,7 @@ void BoatEntity::BeginSelf(RenderServer& renderServer)
 	//   DirectX::XMStoreFloat3(&up, upMomentOfInertiaV);
 	//   DirectX::XMStoreFloat3(&forward, forwardMomentOfInertiaV);
 
-	//   int xxx = 0;
+	//   int xx = 0;
 }
 
 void BoatEntity::UpdateSelf(double deltaTime)
@@ -84,25 +84,25 @@ void BoatEntity::UpdateSelf(double deltaTime)
 	if (mPause)
 		return;
 
-    if (!mUncapSimulationSpeed) {
-	    mUpdateTimer += static_cast<float>(deltaTime);
-	    if (mUpdateTimer < UPDATE_RATE)
-		    return;
+	if (!mUncapSimulationSpeed) {
+		mUpdateTimer += static_cast<float>(deltaTime);
+		if (mUpdateTimer < UPDATE_RATE)
+			return;
 
-	    mUpdateTimer -= UPDATE_RATE;
-    }
+		mUpdateTimer -= UPDATE_RATE;
+	}
 
 	float delta = UPDATE_RATE;
 
 	Input(delta);
 
 	/* Update Camera FOV */
-    XMVECTOR velocity = XMLoadFloat3(&mVelocity);
-    float t = (XMVectorGetX(XMVector3Length(velocity)) - MIN_VELOCITY) / (MAX_VELOCITY - MIN_VELOCITY);
-    t = t * t;
-    float fov = MIN_FOV + t * (MAX_FOV - MIN_FOV);
-    mCameraEntity->SetFov(fov);
-	
+	XMVECTOR velocity = XMLoadFloat3(&mVelocity);
+	float t = (XMVectorGetX(XMVector3Length(velocity)) - MIN_VELOCITY) / (MAX_VELOCITY - MIN_VELOCITY);
+	t = t * t;
+	float fov = MIN_FOV + t * (MAX_FOV - MIN_FOV);
+	mCameraEntity->SetFov(fov);
+
 #if 1
 	XMVECTOR acceleration = XMLoadFloat3(&mAcceleration);
 
@@ -281,8 +281,8 @@ void BoatEntity::UpdateSelf(double deltaTime)
 		{
 			// Only count boat and engine clouds, since air does not contribute
 			std::vector<PointCloud> aboveWaterBoatAndEngine;
-			aboveWaterBoatAndEngine.push_back(aboveWaterPointClouds[0]);
-			aboveWaterBoatAndEngine.push_back(aboveWaterPointClouds[2]);
+			aboveWaterBoatAndEngine.push_back(aboveWaterPointClouds[static_cast<int>(PointCloudType::BOAT)]);
+			aboveWaterBoatAndEngine.push_back(aboveWaterPointClouds[static_cast<int>(PointCloudType::ENGINE)]);
 
 			XMFLOAT3 massCenterAbovef = CalculateCenterOfMass(aboveWaterBoatAndEngine);
 			XMVECTOR massCenterAbove = XMLoadFloat3(&massCenterAbovef);
@@ -315,18 +315,15 @@ void BoatEntity::UpdateSelf(double deltaTime)
 			);
 
 			float volumeBelow =
-				belowWaterPointClouds[0].GetVolume() +
-				belowWaterPointClouds[1].GetVolume() +
-				belowWaterPointClouds[2].GetVolume();
+				belowWaterPointClouds[static_cast<int>(PointCloudType::BOAT)].GetVolume() +
+				belowWaterPointClouds[static_cast<int>(PointCloudType::AIR)].GetVolume() +
+				belowWaterPointClouds[static_cast<int>(PointCloudType::ENGINE)].GetVolume();
 
 			XMVECTOR waterForce = XMVectorSet(0, 1, 0, 0) * volumeBelow * WATER_DENSITY * GRAVITY;
 			float torqueForce = XMVectorGetX(XMVector3Dot(waterForce, torqueUnitVector));
 
 			waterTorque = volumeBelowToCenter * torqueForce;
 		}
-
-		/* Water torque dampening */
-
 		/* Resulting torque */
 		XMVECTOR localRight = XMVectorSet(1, 0, 0, 0);
 		float momentOfIntertiaLength = XMVectorGetX(XMVector3Length(
@@ -336,6 +333,21 @@ void BoatEntity::UpdateSelf(double deltaTime)
 
 		mAngularAcceleration.x = (engineTorque + gravitationalTorque + waterTorque) / XMVectorGetX(XMVector3Length(momentOfIntertiaV));
 		mAngularVelocity.x += mAngularAcceleration.x * delta;
+
+		/* Water torque dampening */
+
+		/*float pitch = mRootEntity->transform.GetAngles3f().x;
+
+		float waterTorqueDragForce = CalculateWaterDragForce(WATER_DENSITY, mBottomAreaUnderWater, mCh, mAngularVelocity.x) * 100;
+
+		float angularDeceleration = waterTorqueDragForce / XMVectorGetX(XMVector3Length(momentOfIntertiaV));
+
+		if (pitch > 0)
+			angularDeceleration *= -1;
+
+		mAngularVelocity.x -= angularDeceleration * delta;
+
+		Logger::Info(std::to_string(angularDeceleration));*/
 	}
 
 	switch (mState)
@@ -356,7 +368,7 @@ void BoatEntity::UpdateSelf(double deltaTime)
 		/* The hull works like a wing on the water */
 		float wingForce = 0.5f * WATER_DENSITY * mFrontAreaUnderWater * mCh * velocityForwardScalar * velocityForwardScalar;
 		float wingAcceleration = wingForce / mMass;
-        mWingForce = wingForce;
+		mWingForce = wingForce;
 
 		/* Water displacement crates an upwards force */
 		float liftAcceleration = WATER_DENSITY * mVolumeUnderWater / mMass * GRAVITY;
@@ -550,111 +562,111 @@ void BoatEntity::RenderImguiSelf()
 		mGameEntity->SetVisible(true);
 	}
 
-    if (ImGui::TreeNodeEx("Settings", TREE_NODE_FLAGS))
-    {
-        ImGui::SeparatorText("Simulation");
-        ImGui::Checkbox("Pause", &mPause);
-        ImGui::Checkbox("Uncap Simulation", &mUncapSimulationSpeed);
-        ImGui::SameLine();
-        ImGui::TextColored(ImVec4(1, 0.5f, 0.5f, 1.0f), "(Expensive)");
+	if (ImGui::TreeNodeEx("Settings", TREE_NODE_FLAGS))
+	{
+		ImGui::SeparatorText("Simulation");
+		ImGui::Checkbox("Pause", &mPause);
+		ImGui::Checkbox("Uncap Simulation", &mUncapSimulationSpeed);
+		ImGui::SameLine();
+		ImGui::TextColored(ImVec4(1, 0.5f, 0.5f, 1.0f), "(Expensive)");
 
-        ImGui::SeparatorText("Boat");
-        ImGui::DragFloat("Wake Factor", &mWakeFactor, 0.001f, 0, 0.99f);
-        DragPercentage("Total Efficiency", mTotalEfficiency);
-        DragPercentage("Hull Efficiency", mHullEfficiency);
-        ImGui::DragFloat("Engine Power", &mEnginePower, 1, 0, FLT_MAX, "%.2f w");
+		ImGui::SeparatorText("Boat");
+		ImGui::DragFloat("Wake Factor", &mWakeFactor, 0.001f, 0, 0.99f);
+		DragPercentage("Total Efficiency", mTotalEfficiency);
+		DragPercentage("Hull Efficiency", mHullEfficiency);
+		ImGui::DragFloat("Engine Power", &mEnginePower, 1, 0, FLT_MAX, "%.2f w");
 
-        ImGui::TreePop();
-    }
+		ImGui::TreePop();
+	}
 
-    if (ImGui::TreeNodeEx("General", TREE_NODE_FLAGS))
-    {
-        ImGui::Text("State: %s", BoatStateToString(mState).c_str());
+	if (ImGui::TreeNodeEx("General", TREE_NODE_FLAGS))
+	{
+		ImGui::Text("State: %s", BoatStateToString(mState).c_str());
 
 		ImGui::SeparatorText("Boat Info");
-        ImGui::Text("Width: %.2f m", GetBoatWidth());
-        ImGui::Text("Height: %.2f m", GetBoatHeight());
-        ImGui::Text("Length: %.2f m", GetBoatLength());
-        ImGui::Text("Mass: %.2f kg", mMass);
+		ImGui::Text("Width: %.2f m", GetBoatWidth());
+		ImGui::Text("Height: %.2f m", GetBoatHeight());
+		ImGui::Text("Length: %.2f m", GetBoatLength());
+		ImGui::Text("Mass: %.2f kg", mMass);
 
-        float totalVolume = 0;
-        totalVolume += GetPointCloud(PointCloudType::BOAT).GetVolume();
-        totalVolume += GetPointCloud(PointCloudType::AIR).GetVolume();
-        totalVolume += GetPointCloud(PointCloudType::ENGINE).GetVolume();
+		float totalVolume = 0;
+		totalVolume += GetPointCloud(PointCloudType::BOAT).GetVolume();
+		totalVolume += GetPointCloud(PointCloudType::AIR).GetVolume();
+		totalVolume += GetPointCloud(PointCloudType::ENGINE).GetVolume();
 
-        ImGui::SeparatorText("Volume");
-        ImGui::Text("Volume: %.2f m^3", totalVolume);
+		ImGui::SeparatorText("Volume");
+		ImGui::Text("Volume: %.2f m^3", totalVolume);
 
-        float percentBelowWater = (mVolumeUnderWater / totalVolume) * 100;
+		float percentBelowWater = (mVolumeUnderWater / totalVolume) * 100;
 
-        ImGui::Text("Volume Below Water: %.1f %%", percentBelowWater);
-        ImGui::Text("Volume Above Water: %.1f %%", 100 - percentBelowWater);
+		ImGui::Text("Volume Below Water: %.1f %%", percentBelowWater);
+		ImGui::Text("Volume Above Water: %.1f %%", 100 - percentBelowWater);
 
-        ImGui::SeparatorText("Area");
-        ImGui::Text("Front Area Below Water: %.3f m^2", mFrontAreaUnderWater);
-        ImGui::Text("Bottom Area Below Water: %.3f m^2", mBottomAreaUnderWater);
+		ImGui::SeparatorText("Area");
+		ImGui::Text("Front Area Below Water: %.3f m^2", mFrontAreaUnderWater);
+		ImGui::Text("Bottom Area Below Water: %.3f m^2", mBottomAreaUnderWater);
 
-        ImGui::SeparatorText("Boat Typical Shape");
-        ImGui::TextColored(ImVec4(1, 1, 1, 1), "Reynolds: %.2f", mReynoldsNumber);
-        ImGui::TextColored(ImVec4(1, 1, 1, 1), "Water Viscosity: %f pas", mWaterViscosity);
-        ImGui::TextColored(ImVec4(1, 1, 1, 1), "CH: %f", mCh);
+		ImGui::SeparatorText("Boat Typical Shape");
+		ImGui::TextColored(ImVec4(1, 1, 1, 1), "Reynolds: %.2f", mReynoldsNumber);
+		ImGui::TextColored(ImVec4(1, 1, 1, 1), "Water Viscosity: %f pas", mWaterViscosity);
+		ImGui::TextColored(ImVec4(1, 1, 1, 1), "CH: %f", mCh);
 
-        ImGui::TreePop();
-    }
+		ImGui::TreePop();
+	}
 
 	if (ImGui::TreeNodeEx("Forces", TREE_NODE_FLAGS))
 	{
 		ImGui::Text("Thrust Force: ");
-        ImGui::SameLine();
-        ImGui::TextColored(ImVec4(0.5f, 0.5f, 1.0f, 1.0f), "Z: ");
-        ImGui::SameLine();
-        ImGui::Text("%.2f N", mThrustForce);
+		ImGui::SameLine();
+		ImGui::TextColored(ImVec4(0.5f, 0.5f, 1.0f, 1.0f), "Z: ");
+		ImGui::SameLine();
+		ImGui::Text("%.2f N", mThrustForce);
 
-        ImGui::Text("Wing Force: ");
-        ImGui::SameLine();
-        ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), "Y: ");
-        ImGui::SameLine();
-        ImGui::Text("%.2f N", mWingForce);
+		ImGui::Text("Wing Force: ");
+		ImGui::SameLine();
+		ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), "Y: ");
+		ImGui::SameLine();
+		ImGui::Text("%.2f N", mWingForce);
 
 		ImGui::Text("Water Drag Force: ", mWaterDragForce.z);
 		ImGui::SameLine();
-        ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1), "Y: ");
-        ImGui::SameLine();
+		ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1), "Y: ");
+		ImGui::SameLine();
 		ImGui::Text("%.2f ", mWaterDragForce.y);
 		ImGui::SameLine();
-        ImGui::TextColored(ImVec4(0.5f, 0.5f, 1.0f, 1.0f), "Z: ");
-        ImGui::SameLine();
-        ImGui::Text("%.2f ", mWaterDragForce.z);
-        ImGui::SameLine();
-        ImGui::Text(" N");
+		ImGui::TextColored(ImVec4(0.5f, 0.5f, 1.0f, 1.0f), "Z: ");
+		ImGui::SameLine();
+		ImGui::Text("%.2f ", mWaterDragForce.z);
+		ImGui::SameLine();
+		ImGui::Text(" N");
 
 		ImGui::TreePop();
 	}
 
 	if (ImGui::TreeNodeEx("Motion", TREE_NODE_FLAGS))
 	{
-        XMFLOAT3 rootAngles = mRootEntity->transform.GetAngles3f();
-        float rootPitchDeg = DirectX::XMConvertToDegrees(rootAngles.x);
+		XMFLOAT3 rootAngles = mRootEntity->transform.GetAngles3f();
+		float rootPitchDeg = DirectX::XMConvertToDegrees(rootAngles.x);
 
-        if (ImGui::DragFloat("Pitch Angle", &rootPitchDeg, 0.1f, 0.0f, 90.0f, "%.1f deg"))
-        {
-            rootAngles.x = XMConvertToRadians(rootPitchDeg);
-            mRootEntity->transform.SetAngles(rootAngles);
-        }
+		if (ImGui::DragFloat("Pitch Angle", &rootPitchDeg, 0.1f, 0.0f, 90.0f, "%.1f deg"))
+		{
+			rootAngles.x = XMConvertToRadians(rootPitchDeg);
+			mRootEntity->transform.SetAngles(rootAngles);
+		}
 
 		ImGui::DragFloat3("Velocity", &mVelocity.x, 0.01f, 0, FLT_MAX, "%.2f m/s");
 		ImGui::DragFloat3("Acceleration", &mAcceleration.x, 0.01f, 0, FLT_MAX, "%.2f m/s^2");
 
 		ImGui::DragFloat3("Angular Velocity", &mAngularVelocity.x, 0.01f, 0, FLT_MAX, "%.2f rad/s");
-        ImGui::DragFloat3("Angular Acceleration", &mAngularAcceleration.x, 0.01f, 0, FLT_MAX, "%.2f rad/s^2");
+		ImGui::DragFloat3("Angular Acceleration", &mAngularAcceleration.x, 0.01f, 0, FLT_MAX, "%.2f rad/s^2");
 		ImGui::TreePop();
 	}
 
-    if (ImGui::TreeNodeEx("Input", TREE_NODE_FLAGS))
-    {
-        ImGui::SliderFloat("Forward Input", &mForwardUserInput, 0, 1);
-        ImGui::SliderFloat("Turn Input", &mTurnUserInput, -1, 1);
+	if (ImGui::TreeNodeEx("Input", TREE_NODE_FLAGS))
+	{
+		ImGui::SliderFloat("Forward Input", &mForwardUserInput, 0, 1);
+		ImGui::SliderFloat("Turn Input", &mTurnUserInput, -1, 1);
 
-        ImGui::TreePop();
-    }
+		ImGui::TreePop();
+	}
 }

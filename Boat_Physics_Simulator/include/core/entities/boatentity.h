@@ -24,7 +24,7 @@ public:
 	void SetBoatModelEntity(ModelEntity* e) { mBoatModelEntity = e; }
 	void SetGameEntity(Entity* e) { mGameEntity = e; }
 	void SetRootEntity(Entity* e) { mRootEntity = e; }
-    void SetCameraEntity(CameraEntity* e) { mCameraEntity = e; }
+	void SetCameraEntity(CameraEntity* e) { mCameraEntity = e; }
 
 protected:
 	virtual void BeginSelf(RenderServer& renderServer) override;
@@ -73,12 +73,12 @@ private:
 	static constexpr float EQUILIBRIUM_VELOCITY_THRESHOLD = 0.3f;
 
 	static constexpr float MIN_VELOCITY = 0.1f;
-    static constexpr float MAX_VELOCITY = 30.0f;
+	static constexpr float MAX_VELOCITY = 30.0f;
 
 	static constexpr float ASCENDING_END_THRESHOLD = 0.1f;
 
-    static constexpr float MIN_FOV = DirectX::XMConvertToRadians(70);
-    static constexpr float MAX_FOV = DirectX::XMConvertToRadians(100);
+	static constexpr float MIN_FOV = DirectX::XMConvertToRadians(70);
+	static constexpr float MAX_FOV = DirectX::XMConvertToRadians(100);
 
 	DirectX::XMFLOAT3 mCenterOfMass;
 	DirectX::XMMATRIX mMomentOfIntertiaMatrix;
@@ -94,7 +94,7 @@ private:
 	ModelEntity* mBoatModelEntity = nullptr;
 	Entity* mRootEntity = nullptr;
 	Entity* mGameEntity = nullptr;
-    CameraEntity* mCameraEntity = nullptr;
+	CameraEntity* mCameraEntity = nullptr;
 
 	float mUpdateTimer = 0.0f;
 
@@ -107,7 +107,7 @@ private:
 
 	// Xi
 	float mForwardUserInput = 0.0f;
-	float mForwardTimeToMaxInput = 1.0f;
+	float mForwardTimeToMaxInput = 0.5f;
 	float mForwardInputTimer = 0.0f;
 
 	float mTurnUserInput = 0.0f;
@@ -124,7 +124,7 @@ private:
 	// Eta_H
 	float mHullEfficiency = 0.95f;
 
-	float mEnginePower = 20000;
+	float mEnginePower = 50000;
 
 	DirectX::XMFLOAT3 mVelocity = { 0, 0, 0 };
 	float forwardAcceleration = 0.0f;
@@ -136,14 +136,14 @@ private:
 	/* Forces */
 	float mThrustForce = 0.0f;
 	DirectX::XMFLOAT3 mWaterDragForce = { 0.0f, 0.0f, 0.0f };
-    float mWingForce = 0.0f;
+	float mWingForce = 0.0f;
 
 	float mWaterViscosity = 0.0f;
 	float mReynoldsNumber = 0.0f;
 	float mCh = 0.0f;
 
 	bool mPause = USE_TITLE_SCREEN; // <-- SET TRUE FOR TITLE SCREEN :)
-    bool mUncapSimulationSpeed = false;
+	bool mUncapSimulationSpeed = false;
 
 	float mVolumeUnderWater = 0.0f;
 
