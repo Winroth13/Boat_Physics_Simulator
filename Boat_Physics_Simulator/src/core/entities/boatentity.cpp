@@ -59,24 +59,6 @@ void BoatEntity::BeginSelf(RenderServer& renderServer)
 	mMass = boatCloud.GetTotalMass() + engineCloud.GetTotalMass();
 
 	mMomentOfIntertiaMatrix = CalculateMomentOfInertiaMatrix(mPointClouds, mCenterOfMass);
-
-	//   DirectX::XMVECTOR rightVector = XMVectorSet(1, 0, 0, 0);
-	//   DirectX::XMVECTOR upVector = XMVectorSet(0, 1, 0, 0);
-	//   DirectX::XMVECTOR forwardVector = XMVectorSet(0, 0, 1, 0);
-
-	//   DirectX::XMVECTOR rightMomentOfInertiaV = rightVector * DirectX::XMVectorGetX(DirectX::XMVector3Length(DirectX::XMVector3Transform(rightVector, mMomentOfIntertiaMatrix)));
-	//   DirectX::XMVECTOR upMomentOfInertiaV = upVector * DirectX::XMVectorGetX(DirectX::XMVector3Length(DirectX::XMVector3Transform(upVector, mMomentOfIntertiaMatrix)));
-	//   DirectX::XMVECTOR forwardMomentOfInertiaV = forwardVector * DirectX::XMVectorGetX(DirectX::XMVector3Length(DirectX::XMVector3Transform(forwardVector, mMomentOfIntertiaMatrix)));
-
-	//   DirectX::XMFLOAT3 right;
-	//   DirectX::XMFLOAT3 up;
-	//   DirectX::XMFLOAT3 forward;
-
-	//   DirectX::XMStoreFloat3(&right, rightMomentOfInertiaV);
-	//   DirectX::XMStoreFloat3(&up, upMomentOfInertiaV);
-	//   DirectX::XMStoreFloat3(&forward, forwardMomentOfInertiaV);
-
-	//   int xx = 0;
 }
 
 void BoatEntity::UpdateSelf(double deltaTime)
@@ -109,7 +91,6 @@ void BoatEntity::UpdateSelf(double deltaTime)
 
 	mCameraEntity->SetFov(fov);
 
-#if 1
 	XMVECTOR acceleration = XMLoadFloat3(&mAcceleration);
 
 	/* Calculate Area */
@@ -454,46 +435,12 @@ void BoatEntity::UpdateSelf(double deltaTime)
 	/* Always move in X and Z */
 	transform.MoveX(mVelocity.x * delta);
 	transform.MoveZ(mVelocity.z * delta);
-#else
-	XMMATRIX transformMatrix = mBoatModelEntity->GetGlobalTransform();
-
-	PointCloud boatAbove;
-	PointCloud boatBelow;
-
-	PointCloud airAbove;
-	PointCloud airBelow;
-
-	PointCloud engineAbove;
-	PointCloud engineBelow;
-
-	/* Calculate Boat Volumes */
-	{
-		SplitPointCloud(GetPointCloud(PointCloudType::BOAT), transformMatrix, 0.0f, boatAbove, boatBelow);
-		mVolumeUnderWater = boatBelow.GetVolume();
-	}
-
-	/* Calculate Air Volumes */
-	{
-		SplitPointCloud(GetPointCloud(PointCloudType::AIR), transformMatrix, 0.0f, airAbove, airBelow);
-		mVolumeUnderWater += airBelow.GetVolume();
-	}
-
-	/* Calculate Engine Volumes */
-	{
-		SplitPointCloud(GetPointCloud(PointCloudType::ENGINE), transformMatrix, 0.0f, engineAbove, engineBelow);
-		mVolumeUnderWater += engineBelow.GetVolume();
-	}
-
-	float liftAcceleration = WATER_DENSITY * mVolumeUnderWater / mMass * GRAVITY;
-	float gravityAcceleration = GRAVITY;
-
-	Logger::Info(std::to_string(liftAcceleration - gravityAcceleration));
-
-#endif
 }
 
 void BoatEntity::RenderSelf(RenderServer& renderServer)
 {
+	// This can be used to render the point clouds, if you want
+
 	// constexpr float radius = 0.025f;
 
 	// Transform pTransform;
