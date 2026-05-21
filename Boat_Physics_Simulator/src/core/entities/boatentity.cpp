@@ -677,7 +677,7 @@ void BoatEntity::RenderImguiSelf()
 		XMFLOAT3 rootAngles = mRootEntity->transform.GetAngles3f();
 		float rootPitchDeg = DirectX::XMConvertToDegrees(rootAngles.x);
 
-		if (ImGui::DragFloat("Pitch Angle", &rootPitchDeg, 0.1f, 0.0f, 90.0f, "%.1f deg"))
+		if (ImGui::DragFloat("Pitch Angle", &rootPitchDeg, 1.0f, -FLT_MAX, FLT_MAX, "%.1f deg"))
 		{
 			rootAngles.x = XMConvertToRadians(rootPitchDeg);
 			mRootEntity->transform.SetAngles(rootAngles);
