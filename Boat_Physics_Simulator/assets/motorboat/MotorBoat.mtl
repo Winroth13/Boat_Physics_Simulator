@@ -1,42 +1,13 @@
-# Blender 5.1.1 MTL File: 'MotorBoat.blend'
+# Blender 5.1.1 MTL File: 'motorboat_new.blend'
 # www.blender.org
 
-newmtl BoatFloor
-Ns 128.000031
+newmtl Default
+Ns 0.000000
 Ka 1.000000 1.000000 1.000000
-Ks 0.200000 0.200000 0.200000
-Ke 0.000000 0.000000 0.000000
+Ks 1.000000 1.000000 1.000000
+Kd 1.000000 1.000000 1.000000
 Ni 1.500000
 d 1.000000
-illum 2
-map_Kd 2022-09-01_210827.jpg
-
-newmtl BoatHullTop
-Ns 128.000031
-Ka 1.000000 1.000000 1.000000
-Ks 0.200000 0.200000 0.200000
-Ke 0.000000 0.000000 0.000000
-Ni 1.500000
-d 1.000000
-illum 2
-map_Kd images (1).jpg
-
-newmtl Handles
-Ns 128.000031
-Ka 1.000000 1.000000 1.000000
-Ks 0.200000 0.200000 0.200000
-Ke 0.000000 0.000000 0.000000
-Ni 1.500000
-d 1.000000
-illum 2
-map_Kd abstract-red-blurred-background-with-dots-pattern-texture-vector.jpg
-
-newmtl HullOutside
-Ns 128.000031
-Ka 1.000000 1.000000 1.000000
-Ks 0.200000 0.200000 0.200000
-Ke 0.000000 0.000000 0.000000
-Ni 1.500000
-d 1.000000
-illum 2
-map_Kd 2022-07-25_212154XY04.jpg
+illum 1
+map_Kd Boat_BaseColor.png
+#norm Boat_Normal.png

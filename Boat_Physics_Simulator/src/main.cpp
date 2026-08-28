@@ -92,7 +92,7 @@ public:
 		rootEntity.SetName("Root");
 		boatEntity.SetRootEntity(&rootEntity);
 
-		auto boatModel = std::make_shared<OBJModel>("assets/new_motorboat/motorboat.obj", vShader, true);
+		auto boatModel = std::make_shared<OBJModel>("assets/motorboat/motorboat.obj", vShader, true);
 
 		auto& boatModelEntity = mScene->CreateEntity<ModelEntity>(boatModel);
 		boatModelEntity.Attach(&rootEntity);
@@ -105,7 +105,7 @@ public:
 		boatMaterial->SetCubemapTexture(skyboxCubemap);
 		boatMaterial->SetReflectiveness(0.1f);
 
-		auto cubeModel = std::make_shared<OBJModel>("assets/cube/cube.obj", vShader);
+		auto cubeModel = std::make_shared<OBJModel>("assets/cube/cube.obj", vShader, true);
 
 		auto cubeMaterial = cubeModel->GetMaterial(0);
 		cubeMaterial->SetCubemapTexture(skyboxCubemap);
@@ -115,12 +115,12 @@ public:
 		cubeEntity.Attach(&rootEntity);
 		cubeEntity.transform.SetPosition(-0.375f, 0.3f, 0.361f);
 		cubeEntity.transform.SetAngles(
-			DirectX::XMConvertToRadians(131.0f),
-			DirectX::XMConvertToRadians(1.0f),
-			DirectX::XMConvertToRadians(0)
+			DirectX::XMConvertToRadians(0),
+			DirectX::XMConvertToRadians(90.0f),
+			DirectX::XMConvertToRadians(31.0f)
 		);
 		cubeEntity.transform.SetScale(0.2f, 0.2f, 0.2f);
-		cubeEntity.SetName("Mattias");
+		cubeEntity.SetName("Amalgam");
 
 		auto& motorHingeEntity = mScene->CreateEntity<Entity>();
 		motorHingeEntity.Attach(&rootEntity);
@@ -128,7 +128,7 @@ public:
 		motorHingeEntity.transform.SetPosition(0.0f, 0.1f, -1.9f);
 		boatEntity.SetMotorHingeEntity(&motorHingeEntity);
 
-		auto boatEngineModel = std::make_shared<OBJModel>("assets/new_motorboat/engine.obj", vShader, true);
+		auto boatEngineModel = std::make_shared<OBJModel>("assets/motorboat/engine.obj", vShader, true);
 		auto& motorModelEntity = mScene->CreateEntity<ModelEntity>(boatEngineModel);
 		motorModelEntity.Attach(&motorHingeEntity);
 		motorModelEntity.SetName("Motor Model");
@@ -179,7 +179,6 @@ public:
 		camera->Attach(boat);
 		boat->SetVisible(true);
 		boat->Unpause();
-
 	};
 
 	void Shutdown() override
