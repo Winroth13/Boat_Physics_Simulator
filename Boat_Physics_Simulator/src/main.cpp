@@ -115,9 +115,9 @@ public:
 		cubeEntity.Attach(&rootEntity);
 		cubeEntity.transform.SetPosition(-0.375f, 0.3f, 0.361f);
 		cubeEntity.transform.SetAngles(
-			DirectX::XMConvertToRadians(0),
-			DirectX::XMConvertToRadians(90.0f),
-			DirectX::XMConvertToRadians(31.0f)
+			DirectX::XMConvertToRadians(32.0f),
+			DirectX::XMConvertToRadians(0.0f),
+			DirectX::XMConvertToRadians(0.0f)
 		);
 		cubeEntity.transform.SetScale(0.2f, 0.2f, 0.2f);
 		cubeEntity.SetName("Amalgam");
