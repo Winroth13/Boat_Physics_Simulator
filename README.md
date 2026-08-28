@@ -1,4 +1,4 @@
-# Boat_Physics_Simulator
+# Boat Physics Simulator
 
 Authors: Emil Winroth, Johannes Ledendal & Casper Turesson
 
