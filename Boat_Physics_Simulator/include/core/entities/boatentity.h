@@ -11,8 +11,6 @@
 #include <memory>
 #include <DirectXMath.h>
 
-#define USE_TITLE_SCREEN true
-
 class BoatEntity : public Entity
 {
 public:
